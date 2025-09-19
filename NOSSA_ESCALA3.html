@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nossa Escala</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background-color: #e5e7eb;
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .lunch-cell {
+            background-color: #fce7f3;
+        }
+        .opening-cell {
+            background-color: #d1fae5;
+            font-weight: 600;
+        }
+        input[type="text"], input[type="email"], input[type="password"], select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+        .btn-primary {
+            background-color: #10b981;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #059669;
+        }
+        .btn-secondary {
+            background-color: #d1d5db;
+            color: #1f2937;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #9ca3af;
+        }
+        .export-layout {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .export-layout h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .export-layout table {
+            border: 2px solid #e5e7eb;
+        }
+        .export-layout th, .export-layout td {
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+        }
+        .hidden {
+            display: none;
+        }
+        #login-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        #main-app {
+            display: none;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #10b981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-8">
+
+    <!-- Seção de Login -->
+    <div id="login-section" class="space-y-6">
+        <div class="card space-y-4">
+            <h1 class="text-4xl font-bold text-gray-800">Nossa Escala</h1>
+            <p class="mt-2 text-lg text-gray-600">Equipe de comunicação - Sesc Mogi das Cruzes</p>
+            <div id="auth-ui" class="mt-8 space-y-4">
+                <input type="email" id="email-input" placeholder="E-mail (nome de usuário)" class="w-full p-2 border rounded">
+                <input type="password" id="password-input" placeholder="Senha" class="w-full p-2 border rounded">
+                <button id="login-btn" class="btn-primary w-full">Entrar</button>
+                <button id="signup-btn" class="btn-secondary w-full">Cadastrar</button>
+            </div>
+            <div id="loading-spinner" class="loading-spinner hidden mx-auto"></div>
+            <p id="user-info" class="text-gray-700 mt-4 hidden">Bem-vindo, <span id="user-name"></span>!</p>
+        </div>
+    </div>
+
+    <!-- Seção Principal do App -->
+    <div id="main-app" class="container mx-auto space-y-8">
+        <header class="text-center">
+            <h1 class="text-4xl font-bold text-gray-800">Nossa Escala</h1>
+            <p class="mt-2 text-lg text-gray-600">Equipe de comunicação - Sesc Mogi das Cruzes</p>
+            <button id="logout-btn" class="btn-secondary mt-4">Sair</button>
+        </header>
+
+        <!-- Seção para Adicionar Pessoas e Postos -->
+        <div class="card space-y-4">
+            <h2 class="text-2xl font-bold">Configurações</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Adicionar Novo Membro</h3>
+                    <div class="flex space-x-2">
+                        <input type="text" id="newMemberName" placeholder="Nome do membro" class="flex-grow">
+                        <button id="addMemberBtn" class="btn-primary">Adicionar</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Adicionar Novo Posto</h3>
+                    <div class="flex space-x-2">
+                        <input type="text" id="newPostName" placeholder="Nome do posto" class="flex-grow">
+                        <button id="addPostBtn" class="btn-primary">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Membros da Equipe</h3>
+                    <ul id="membersList" class="list-disc list-inside space-y-1"></ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Postos de Trabalho</h3>
+                    <ul id="postsList" class="list-disc list-inside space-y-1"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nova Seção para o Funcionário de Abertura -->
+        <div class="card space-y-4">
+            <h2 class="text-2xl font-bold">Funcionário de Abertura</h2>
+            <div>
+                <label for="openingMemberSelect" class="block text-sm font-medium text-gray-700">Selecione o membro que fará a abertura:</label>
+                <select id="openingMemberSelect" class="w-full mt-1"></select>
+            </div>
+        </div>
+
+        <!-- Seção para Criar a Escala -->
+        <div class="card space-y-4">
+            <h2 class="text-2xl font-bold">Criar Escala</h2>
+            <div>
+                <label for="scheduleDate" class="block text-sm font-medium text-gray-700">Data:</label>
+                <input type="date" id="scheduleDate" class="mt-1 block w-full">
+            </div>
+            <div class="flex items-center space-x-2 mt-4">
+                <input type="checkbox" id="isEventDay" class="form-checkbox h-5 w-5 text-green-600 rounded">
+                <label for="isEventDay" class="text-sm font-medium text-gray-700">Ativar Escala de Evento</label>
+            </div>
+            <div class="flex items-center space-x-4 mt-4">
+                <label class="text-sm font-medium text-gray-700">Modo de Geração:</label>
+                <div class="flex space-x-2">
+                    <input type="radio" id="dailyMode" name="schedulePeriod" value="daily" checked>
+                    <label for="dailyMode">Diária</label>
+                    <input type="radio" id="weeklyMode" name="schedulePeriod" value="weekly">
+                    <label for="weeklyMode">Semanal</label>
+                </div>
+            </div>
+             <!-- Adding the auto/manual radio buttons back -->
+            <div class="flex items-center space-x-4 mt-4">
+                <label class="text-sm font-medium text-gray-700">Modo de Geração:</label>
+                <div class="flex space-x-2">
+                    <input type="radio" id="manualMode" name="scheduleMode" value="manual" checked>
+                    <label for="manualMode">Manual</label>
+                    <input type="radio" id="autoMode" name="scheduleMode" value="auto">
+                    <label for="autoMode">Automático</label>
+                </div>
+            </div>
+            <div id="generation-info" class="p-3 bg-yellow-100 rounded-md text-sm text-yellow-800 border border-yellow-200 mt-2">
+                <p>🔔 **Atenção**</p>
+                <p>A geração automática da escala só funciona corretamente quando o número de postos de trabalho é igual ao número de funcionários disponíveis.</p>
+                <p>⚠️ **Importante:** ALMOÇO não é considerado um posto de trabalho, portanto não deve ser incluído nessa contagem.</p>
+            </div>
+            <div id="eventConfig" class="grid md:grid-cols-2 gap-6 hidden">
+                <div class="md:col-span-2">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="isOvertimeNeeded" class="form-checkbox h-5 w-5 text-indigo-600 rounded">
+                        <label for="isOvertimeNeeded" class="text-sm font-medium text-gray-700">Haverá Hora Extra?</label>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <h3 class="text-xl font-semibold mb-2">Horário do Grupo 2</h3>
+                    <select id="group2ScheduleType" class="w-full">
+                        <option value="11h-20h">Entrada 11h / Saída 20h</option>
+                        <option value="12h-21h">Entrada 12h / Saída 21h</option>
+                    </select>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Pessoas do Grupo 1 (Horário Normal)</h3>
+                    <select id="group1Select" multiple class="w-full h-48 border border-gray-300 rounded-md"></select>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Pessoas do Grupo 2 (Horário Estendido)</h3>
+                    <select id="group2Select" multiple class="w-full h-48 border border-gray-300 rounded-md"></select>
+                </div>
+            </div>
+            <div id="scheduleTableContainer" class="table-container mt-4"></div>
+            <div class="flex space-x-4 mt-4">
+                <button id="generateScheduleBtn" class="btn-secondary">Gerar Escala</button>
+                <button id="saveCloudBtn" class="btn-primary hidden">Salvar na Nuvem</button>
+                <button id="exportScheduleBtn" class="btn-primary hidden">Exportar como JPG</button>
+            </div>
+        </div>
+
+        <!-- Seção de Escalas Salvas na Nuvem -->
+        <div class="card space-y-4">
+            <h2 class="text-2xl font-bold">Escalas Salvas na Nuvem</h2>
+            <div class="flex space-x-4">
+                <input type="text" id="filterCreatorInput" placeholder="Filtrar por nome do criador..." class="flex-grow">
+                <button id="filterCreatorBtn" class="btn-secondary">Filtrar</button>
+            </div>
+            <div id="cloudSchedulesList" class="space-y-2">
+                <p id="loading-cloud" class="text-gray-500">Carregando escalas...</p>
+            </div>
+        </div>
+        
+        <!-- Nova seção para exportação seletiva -->
+        <div id="selectiveExport" class="card space-y-4 hidden">
+             <h2 class="text-2xl font-bold">Exportar Dias Específicos</h2>
+             <div id="exportDayButtons" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        </div>
+
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <p id="modalMessage" class="text-center text-lg font-medium text-gray-800 mb-4"></p>
+            <div class="flex justify-center space-x-4">
+                <button id="modalConfirmBtn" class="btn-primary">Sim</button>
+                <button id="modalCancelBtn" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout Oculto para Exportação da Imagem -->
+    <div id="exportLayout" class="export-layout" style="position: absolute; left: -9999px; top: -9999px;"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Cole suas credenciais do Firebase aqui.
+        // Você pode encontrar isso em: Firebase Console > Configurações do projeto > Geral > Seus apps
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjijApmc5SC0Xc9dkJDhoq4pBUTInu-zw",
+    authDomain: "gerador-de-escalas---sesc-mogi.firebaseapp.com",
+    projectId: "gerador-de-escalas---sesc-mogi",
+    storageBucket: "gerador-de-escalas---sesc-mogi.firebasestorage.app",
+    messagingSenderId: "555087427994",
+    appId: "1:555087427994:web:30a3227ea79983789c2223",
+    measurementId: "G-008XLSTP98"
+        };
+        
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- Firebase Initialization ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- DOM Elements ---
+        const loginSection = document.getElementById('login-section');
+        const mainApp = document.getElementById('main-app');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const loginBtn = document.getElementById('login-btn');
+        const signupBtn = document.getElementById('signup-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userInfo = document.getElementById('user-info');
+        const userNameSpan = document.getElementById('user-name');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const cloudSchedulesList = document.getElementById('cloudSchedulesList');
+        const loadingCloud = document.getElementById('loading-cloud');
+        const filterCreatorInput = document.getElementById('filterCreatorInput');
+        const filterCreatorBtn = document.getElementById('filterCreatorBtn');
+
+        const newMemberNameInput = document.getElementById('newMemberName');
+        const addMemberBtn = document.getElementById('addMemberBtn');
+        const membersList = document.getElementById('membersList');
+        const newPostNameInput = document.getElementById('newPostName');
+        const addPostBtn = document.getElementById('addPostBtn');
+        const postsList = document.getElementById('postsList');
+        const scheduleDateInput = document.getElementById('scheduleDate');
+        const isEventDayCheckbox = document.getElementById('isEventDay');
+        const eventConfigDiv = document.getElementById('eventConfig');
+        const group1Select = document.getElementById('group1Select');
+        const group2Select = document.getElementById('group2Select');
+        const isOvertimeNeededCheckbox = document.getElementById('isOvertimeNeeded');
+        const group2ScheduleTypeSelect = document.getElementById('group2ScheduleType');
+        const generateScheduleBtn = document.getElementById('generateScheduleBtn');
+        const saveCloudBtn = document.getElementById('saveCloudBtn');
+        const exportScheduleBtn = document.getElementById('exportScheduleBtn');
+        const scheduleTableContainer = document.getElementById('scheduleTableContainer');
+        const exportLayoutDiv = document.getElementById('exportLayout');
+        const modal = document.getElementById('modal');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+        const openingMemberSelect = document.getElementById('openingMemberSelect');
+
+        const dailyModeRadio = document.getElementById('dailyMode');
+        const weeklyModeRadio = document.getElementById('weeklyMode');
+        const schedulePeriodRadios = document.getElementsByName('schedulePeriod');
+        const manualModeRadio = document.getElementById('manualMode');
+        const autoModeRadio = document.getElementById('autoMode');
+        
+        const selectiveExportDiv = document.getElementById('selectiveExport');
+        const exportDayButtonsDiv = document.getElementById('exportDayButtons');
+
+
+        let userId = null;
+        let members = ['Lee', 'Carol', 'Mari', 'Ju', 'Karen', 'Robert'];
+        let posts = ['P1', 'CATRACA', 'VESTIÁRIO', 'SOÇAITE', 'TENDA', 'PDV', 'ALMOÇO'];
+        let currentSchedule = [];
+        let lastPostAssignment = {};
+        let allCloudSchedules = [];
+        let creatorName = '';
+        let openingMember = null;
+        let isWeeklyMode = false;
+
+        function showApp() {
+            loginSection.style.display = 'none';
+            mainApp.style.display = 'block';
+        }
+
+        function showLogin() {
+            loginSection.style.display = 'flex';
+            mainApp.style.display = 'none';
+        }
+
+        function showModal(message, callback) {
+            modalMessage.textContent = message;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modalConfirmBtn.onclick = () => {
+                modal.classList.add('hidden');
+                callback(true);
+            };
+            modalCancelBtn.onclick = () => {
+                modal.classList.add('hidden');
+                callback(false);
+            };
+        }
+
+        // --- Firebase Auth & Firestore Logic ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                creatorName = user.email ? user.email.split('@')[0] : 'Usuário';
+                userNameSpan.textContent = creatorName;
+                userInfo.classList.remove('hidden');
+                showApp();
+                setTimeout(async () => {
+                    await loadUserData();
+                    listenToCloudSchedules();
+                }, 1000);
+            } else {
+                userId = null;
+                showLogin();
+            }
+            loadingSpinner.classList.add('hidden');
+        });
+
+        loginBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            loadingSpinner.classList.remove('hidden');
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                showModal("Erro ao fazer login: " + error.message, () => {});
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        signupBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            loadingSpinner.classList.remove('hidden');
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                showModal("Conta criada com sucesso! Você já está logado.", () => {});
+            } catch (error) {
+                showModal("Erro ao criar conta: " + error.message, () => {});
+            } finally {
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+        
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            showModal("Desconectado com sucesso.", () => {});
+        });
+
+        // --- Firestore Data Operations ---
+        async function loadUserData() {
+            if (!userId) return;
+            const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
+            try {
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.members) members = data.members;
+                    if (data.posts) posts = data.posts;
+                    renderMembers();
+                    renderPosts();
+                } else {
+                    console.log("Nenhum dado de usuário encontrado, usando valores padrão.");
+                }
+            } catch (e) {
+                console.error("Erro ao carregar dados do usuário: ", e);
+            }
+        }
+
+        async function saveUserData() {
+            if (!userId) return;
+            const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
+            try {
+                await setDoc(userDocRef, { members, posts }, { merge: true });
+                console.log("Dados de usuário salvos com sucesso!");
+            } catch (e) {
+                console.error("Erro ao salvar dados do usuário: ", e);
+            }
+        }
+        
+        async function saveScheduleToCloud(creator) {
+            if (!userId || currentSchedule.length === 0 || !scheduleDateInput.value) {
+                showModal("Por favor, gere uma escala e faça o login para salvar.", () => {});
+                return;
+            }
+            syncScheduleFromDOM();
+            const scheduleDate = scheduleDateInput.value;
+            
+            const docId = isWeeklyMode ? `${scheduleDate}_weekly` : scheduleDate;
+            const scheduleDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', docId);
+
+            try {
+                await setDoc(scheduleDocRef, {
+                    date: scheduleDate,
+                    schedule: JSON.stringify(currentSchedule),
+                    members: members,
+                    posts: posts,
+                    userId: userId,
+                    creator: creator,
+                    isWeekly: isWeeklyMode
+                });
+                showModal("Escala salva na nuvem com sucesso!", () => {});
+            } catch (e) {
+                console.error("Erro ao salvar a escala na nuvem: ", e);
+                showModal("Ocorreu um erro ao salvar a escala na nuvem.", () => {});
+            }
+        }
+
+        function listenToCloudSchedules() {
+            if (!userId) return;
+            const schedulesCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+            onSnapshot(schedulesCollectionRef, (snapshot) => {
+                allCloudSchedules = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderCloudSchedules();
+            });
+        }
+        
+        function renderCloudSchedules(filteredSchedules = allCloudSchedules) {
+            loadingCloud.classList.add('hidden');
+            cloudSchedulesList.innerHTML = '';
+            if (filteredSchedules.length === 0) {
+                cloudSchedulesList.innerHTML = '<p class="text-gray-500">Nenhuma escala salva na nuvem ainda.</p>';
+            } else {
+                filteredSchedules.forEach(data => {
+                    const item = document.createElement('div');
+                    item.className = 'flex justify-between items-center bg-gray-100 p-3 rounded-md';
+                    const displayDate = data.isWeekly ? `Semana de ${new Date(data.date).toLocaleDateString('pt-BR')}` : new Date(data.date).toLocaleDateString('pt-BR');
+                    item.innerHTML = `
+                        <span class="font-medium">${displayDate} (Criado por: ${data.creator})</span>
+                        <div>
+                            <button class="load-cloud-btn btn-primary text-sm p-1 px-3" data-id="${data.id}">Carregar</button>
+                            <button class="delete-cloud-btn text-red-500 hover:text-red-700 text-sm p-1 px-3" data-id="${data.id}">Excluir</button>
+                        </div>
+                    `;
+                    cloudSchedulesList.appendChild(item);
+                });
+            }
+        }
+        
+        filterCreatorBtn.addEventListener('click', () => {
+            const filterName = filterCreatorInput.value.trim().toLowerCase();
+            const filtered = allCloudSchedules.filter(schedule => 
+                schedule.creator && schedule.creator.toLowerCase().includes(filterName)
+            );
+            renderCloudSchedules(filtered);
+        });
+
+        cloudSchedulesList.addEventListener('click', async (e) => {
+            const target = e.target;
+            const scheduleId = target.dataset.id;
+            if (target.classList.contains('load-cloud-btn')) {
+                const scheduleDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', scheduleId);
+                const docSnap = await getDoc(scheduleDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    members = data.members;
+                    posts = data.posts;
+                    isWeeklyMode = data.isWeekly;
+                    currentSchedule = JSON.parse(data.schedule);
+                    scheduleDateInput.value = data.date;
+                    isEventDayCheckbox.checked = posts.includes('SHOW');
+                    eventConfigDiv.classList.toggle('hidden', !isEventDayCheckbox.checked);
+                    renderMembers();
+                    renderPosts();
+                    renderSchedule(currentSchedule, scheduleDateInput.value);
+                    if (isWeeklyMode) {
+                        weeklyModeRadio.checked = true;
+                    } else {
+                        dailyModeRadio.checked = true;
+                    }
+                    showModal("Escala carregada da nuvem com sucesso!", () => {});
+                } else {
+                    showModal("Escala não encontrada na nuvem.", () => {});
+                }
+            } else if (target.classList.contains('delete-cloud-btn')) {
+                showModal("Tem certeza que deseja excluir esta escala? Esta ação é irreversível.", async (confirmed) => {
+                    if (confirmed) {
+                        try {
+                            const scheduleDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', scheduleId);
+                            await deleteDoc(scheduleDocRef);
+                            showModal("Escala excluída com sucesso.", () => {});
+                        } catch (e) {
+                            console.error("Erro ao excluir a escala: ", e);
+                            showModal("Ocorreu um erro ao excluir a escala.", () => {});
+                        }
+                    }
+                });
+            }
+        });
+        
+        // --- Remaining app logic from original file ---
+        function renderMembers() {
+            membersList.innerHTML = '';
+            group1Select.innerHTML = '';
+            group2Select.innerHTML = '';
+            openingMemberSelect.innerHTML = '';
+            members.forEach((member, index) => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center';
+                li.textContent = member;
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'Remover';
+                removeBtn.className = 'text-red-500 hover:text-red-700 text-sm';
+                removeBtn.onclick = () => removeMember(index);
+                li.appendChild(removeBtn);
+                membersList.appendChild(li);
+
+                const option1 = document.createElement('option');
+                option1.value = member;
+                option1.textContent = member;
+                group1Select.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = member;
+                option2.textContent = member;
+                group2Select.appendChild(option2);
+
+                const openingOption = document.createElement('option');
+                openingOption.value = member;
+                openingOption.textContent = member;
+                openingMemberSelect.appendChild(openingOption);
+            });
+            saveUserData();
+        }
+
+        function addMember() {
+            const name = newMemberNameInput.value.trim();
+            if (name && !members.includes(name)) {
+                members.push(name);
+                newMemberNameInput.value = '';
+                renderMembers();
+            }
+        }
+
+        function removeMember(index) {
+            showModal('Tem certeza que deseja remover este membro?', (confirmed) => {
+                if (confirmed) {
+                    members.splice(index, 1);
+                    renderMembers();
+                }
+            });
+        }
+
+        addMemberBtn.addEventListener('click', addMember);
+        newMemberNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addMember();
+        });
+
+        function renderPosts() {
+            postsList.innerHTML = '';
+            posts.forEach((post, index) => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center';
+                li.textContent = post;
+                const fixedPosts = ['ALMOÇO', 'P1', 'VESTIÁRIO'];
+                if (!fixedPosts.includes(post)) {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.textContent = 'Remover';
+                    removeBtn.className = 'text-red-500 hover:text-red-700 text-sm';
+                    removeBtn.onclick = () => removePost(index);
+                    li.appendChild(removeBtn);
+                }
+                postsList.appendChild(li);
+            });
+            saveUserData();
+        }
+
+        function addPost() {
+            const name = newPostNameInput.value.trim().toUpperCase();
+            if (name && !posts.includes(name)) {
+                posts.push(name);
+                newPostNameInput.value = '';
+                renderPosts();
+            }
+        }
+
+        function removePost(index) {
+            showModal('Tem certeza que deseja remover este posto?', (confirmed) => {
+                if (confirmed) {
+                    posts.splice(index, 1);
+                    renderPosts();
+                }
+            });
+        }
+
+        addPostBtn.addEventListener('click', addPost);
+        newPostNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addPost();
+        });
+        
+        isEventDayCheckbox.addEventListener('change', () => {
+            if (isEventDayCheckbox.checked) {
+                if (!posts.includes('SHOW')) {
+                    posts.push('SHOW');
+                }
+                eventConfigDiv.classList.remove('hidden');
+            } else {
+                const showIndex = posts.indexOf('SHOW');
+                if (showIndex > -1) {
+                    posts.splice(showIndex, 1);
+                }
+                eventConfigDiv.classList.add('hidden');
+            }
+            renderPosts();
+            renderSchedule(currentSchedule, scheduleDateInput.value);
+        });
+        
+        function formatHour(hourNumber) {
+            const hours = Math.floor(hourNumber);
+            const minutes = (hourNumber - hours) * 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        function getWorkHours(isEventDay, isOvertimeNeeded, date) {
+            const dayOfWeek = date.getDay();
+            let allWorkHours = [];
+            let openingHours = [];
+
+            if (dayOfWeek >= 2 && dayOfWeek <= 5) {
+                openingHours = Array.from({ length: 9 }, (_, i) => 12.5 + i);
+                if (isEventDay) {
+                    const group2ScheduleType = group2ScheduleTypeSelect.value;
+                    let normalHours = Array.from({ length: 9 }, (_, i) => 9 + i);
+                    let group2Hours = [];
+                    if (group2ScheduleType === '11h-20h') {
+                        group2Hours = Array.from({ length: 10 }, (_, i) => 11 + i);
+                    } else if (group2ScheduleType === '12h-21h') {
+                        group2Hours = Array.from({ length: 10 }, (_, i) => 12 + i);
+                    }
+                    allWorkHours = [...new Set([...normalHours, ...group2Hours])].sort((a, b) => a - b);
+                    if (isOvertimeNeeded) {
+                       const extraHours = [18, 19, 20];
+                       allWorkHours = [...new Set([...allWorkHours, ...extraHours])].sort((a,b) => a-b);
+                    }
+                } else {
+                    const normalHours = Array.from({ length: 9 }, (_, i) => 13 + i);
+                    allWorkHours = normalHours;
+                }
+            } else if (dayOfWeek === 6 || dayOfWeek === 0) {
+                openingHours = Array.from({ length: 9 }, (_, i) => 8.5 + i);
+                if (isEventDay) {
+                    const group2ScheduleType = group2ScheduleTypeSelect.value;
+                    let normalHours = Array.from({ length: 9 }, (_, i) => 9 + i);
+                    let group2Hours = [];
+                    if (group2ScheduleType === '11h-20h') {
+                        group2Hours = Array.from({ length: 10 }, (_, i) => 11 + i);
+                    } else if (group2ScheduleType === '12h-21h') {
+                        group2Hours = Array.from({ length: 10 }, (_, i) => 12 + i);
+                    }
+                    allWorkHours = [...new Set([...normalHours, ...group2Hours])].sort((a, b) => a - b);
+                    if (isOvertimeNeeded) {
+                        const extraHours = [18, 19, 20];
+                        allWorkHours = [...new Set([...allWorkHours, ...extraHours])].sort((a,b) => a-b);
+                    }
+                } else {
+                    const normalHours = Array.from({ length: 9 }, (_, i) => 9 + i);
+                    allWorkHours = normalHours;
+                }
+            } else {
+                showModal("A escala é gerada apenas para Terça-feira a Domingo.", (confirmed) => {});
+                return null;
+            }
+            
+            return { allWorkHours, openingHours };
+        }
+
+        function generateSchedule() {
+            const selectedDate = scheduleDateInput.value;
+            if (!selectedDate || members.length === 0 || posts.length < 3) {
+                showModal("Por favor, selecione uma data e adicione membros e postos (incluindo P1 e VESTIÁRIO).", (confirmed) => {});
+                return;
+            }
+            const isEventDay = isEventDayCheckbox.checked;
+            const isOvertimeNeeded = isOvertimeNeededCheckbox.checked;
+            const isAutomatic = autoModeRadio.checked;
+            isWeeklyMode = weeklyModeRadio.checked;
+
+            if (isWeeklyMode) {
+                currentSchedule = generateWeeklySchedule(selectedDate, isEventDay, isOvertimeNeeded, isAutomatic);
+                renderSchedule(currentSchedule);
+                selectiveExportDiv.classList.remove('hidden');
+                renderExportButtons();
+            } else {
+                const date = new Date(selectedDate + 'T00:00:00');
+                const workHoursData = getWorkHours(isEventDay, isOvertimeNeeded, date);
+                if (!workHoursData) return;
+                const { allWorkHours } = workHoursData;
+
+                if (isAutomatic) {
+                     currentSchedule = [{ date: selectedDate, schedule: generateAutomaticDailySchedule(allWorkHours, members, posts, date)}];
+                } else {
+                    currentSchedule = [{ date: selectedDate, schedule: generateManualDailySchedule(allWorkHours, members, posts, isEventDay)}];
+                }
+                renderSchedule(currentSchedule);
+                selectiveExportDiv.classList.add('hidden');
+            }
+
+            saveCloudBtn.classList.remove('hidden');
+            exportScheduleBtn.classList.remove('hidden');
+        }
+
+        function generateManualDailySchedule(allWorkHours, members, posts, isEventDay) {
+            return allWorkHours.map(hour => ({
+                hour: formatHour(hour),
+                assignments: {}
+            }));
+        }
+
+        function generateWeeklySchedule(startDate, isEventDay, isOvertimeNeeded, isAutomatic) {
+            const weeklySchedule = [];
+            let date = new Date(startDate + 'T00:00:00');
+            for (let i = 0; i < 7; i++) {
+                const dayOfWeek = date.getDay();
+                const workHoursData = getWorkHours(isEventDay, isOvertimeNeeded, date);
+                if (workHoursData) {
+                    const { allWorkHours } = workHoursData;
+                    let dailySchedule = [];
+                    if (isAutomatic) {
+                        dailySchedule = generateAutomaticDailySchedule(allWorkHours, members, posts, date);
+                    } else {
+                        dailySchedule = generateManualDailySchedule(allWorkHours, members, posts, isEventDay);
+                    }
+                    weeklySchedule.push({
+                        date: date.toISOString().split('T')[0],
+                        schedule: dailySchedule
+                    });
+                }
+                date.setDate(date.getDate() + 1);
+            }
+            return weeklySchedule;
+        }
+
+
+        function generateAutomaticDailySchedule(allWorkHours, members, posts, date) {
+            const schedule = [];
+            
+            const isEventDay = isEventDayCheckbox.checked;
+            const isOvertimeNeeded = isOvertimeNeededCheckbox.checked;
+            const group1Members = isEventDay ? Array.from(group1Select.selectedOptions).map(opt => opt.value) : [];
+            const group2Members = isEventDay ? Array.from(group2Select.selectedOptions).map(opt => opt.value) : [];
+            
+            const lunchAssignments = {};
+            const dayOfWeek = date.getDay();
+            const isWeekday = dayOfWeek >= 2 && dayOfWeek <= 5;
+            
+            const totalMembers = members.length;
+            const shuffledMembers = [...members].sort(() => 0.5 - Math.random());
+            
+            let lunchHours = [];
+            if (isEventDay) {
+                const group1LunchOptions = [12, 13, 14];
+                group1Members.forEach(member => {
+                    const hour = group1LunchOptions[Math.floor(Math.random() * group1LunchOptions.length)];
+                    if (!lunchAssignments[member]) {
+                        lunchAssignments[member] = hour;
+                    }
+                });
+                const group2LunchOptions = [15, 16];
+                group2Members.forEach(member => {
+                    const hour = group2LunchOptions[Math.floor(Math.random() * group2LunchOptions.length)];
+                    if (!lunchAssignments[member]) {
+                        lunchAssignments[member] = hour;
+                    }
+                });
+            } else {
+                lunchHours = isWeekday ? [16, 17, 18, 19] : [12, 13, 14, 15];
+                let lunchesPerHour = totalMembers > 4 ? 2 : 1;
+                let lunchCount = 0;
+                for (let i = 0; i < totalMembers; i++) {
+                     const member = shuffledMembers[i];
+                     const randomLunchHour = lunchHours[Math.floor(Math.random() * lunchHours.length)];
+                     lunchAssignments[member] = randomLunchHour;
+                 }
+            }
+            
+            allWorkHours.forEach(hour => {
+                const assignments = {};
+                let membersToAssign = [...members].sort(() => 0.5 - Math.random());
+                const availablePosts = [...posts].filter(p => p !== 'ALMOÇO');
+                const priorityPosts = ['P1', 'VESTIÁRIO', 'CATRACA'];
+                const openingMember = openingMemberSelect.value;
+                const { openingHours } = getWorkHours(isEventDay, isOvertimeNeeded, date);
+                const isOpeningHour = openingHours.includes(hour);
+
+                membersToAssign = membersToAssign.filter(member => {
+                    if (lunchAssignments[member] === hour) {
+                        assignments[member] = 'ALMOÇO';
+                        lastPostAssignment[member] = 'ALMOÇO';
+                        return false; 
+                    }
+                    return true;
+                });
+                
+                let remainingMembers = membersToAssign;
+                let availableNormalPosts = availablePosts.filter(p => !priorityPosts.includes(p));
+
+                if (isOpeningHour && openingMember && remainingMembers.includes(openingMember)) {
+                    assignments[openingMember] = 'P1';
+                    lastPostAssignment[openingMember] = 'P1';
+                    remainingMembers = remainingMembers.filter(m => m !== openingMember);
+                }
+
+                if (isEventDay && parseFloat(hour) >= 18) {
+                    remainingMembers.forEach(member => {
+                        assignments[member] = 'SHOW';
+                        lastPostAssignment[member] = 'SHOW';
+                    });
+                    remainingMembers = [];
+                }
+
+                priorityPosts.forEach(post => {
+                    if (remainingMembers.length === 0) return;
+                    const availableMembers = remainingMembers.filter(member => lastPostAssignment[member] !== post);
+                    if (availableMembers.length > 0) {
+                        const memberToAssign = availableMembers[0];
+                        assignments[memberToAssign] = post;
+                        lastPostAssignment[memberToAssign] = post;
+                        remainingMembers = remainingMembers.filter(m => m !== memberToAssign);
+                    }
+                });
+
+                let usedPostsThisHour = Object.values(assignments);
+                let remainingPostsToAssign = availableNormalPosts.filter(p => !usedPostsThisHour.includes(p));
+
+                remainingMembers.forEach(member => {
+                    let postToAssign = null;
+                    const potentialPosts = remainingPostsToAssign.filter(p => lastPostAssignment[member] !== p);
+                    
+                    if (potentialPosts.length > 0) {
+                        postToAssign = potentialPosts[0];
+                    } else if (remainingPostsToAssign.length > 0) {
+                        postToAssign = remainingPostsToAssign[0];
+                    } else {
+                        const availableFallbackPosts = availablePosts.filter(p => lastPostAssignment[member] !== p);
+                        if(availableFallbackPosts.length > 0){
+                            postToAssign = availableFallbackPosts[0];
+                        } else {
+                            postToAssign = availablePosts[0];
+                        }
+                    }
+                    
+                    if (postToAssign) {
+                        assignments[member] = postToAssign;
+                        lastPostAssignment[member] = postToAssign;
+                        remainingPostsToAssign = remainingPostsToAssign.filter(p => p !== postToAssign);
+                    } else {
+                        assignments[member] = ''; 
+                    }
+                });
+                
+                schedule.push({ hour: formatHour(hour), assignments: assignments });
+            });
+            return schedule;
+        }
+
+
+        function syncScheduleFromDOM() {
+            const tables = scheduleTableContainer.querySelectorAll('table');
+            if (tables.length === 0) return;
+
+            currentSchedule.forEach((dayEntry, dayIndex) => {
+                const table = tables[dayIndex];
+                const rows = table.querySelector('tbody').rows;
+                dayEntry.schedule.forEach((entry, rowIndex) => {
+                    const row = rows[rowIndex];
+                    members.forEach((member, memberIndex) => {
+                        const cell = row.cells[memberIndex + 1];
+                        const select = cell.querySelector('select');
+                        if (select) {
+                            entry.assignments[member] = select.value;
+                        } else {
+                            entry.assignments[member] = cell.textContent.split(' ')[0] || '';
+                        }
+                    });
+                });
+            });
+        }
+
+        function renderSchedule(scheduleData) {
+            scheduleTableContainer.innerHTML = '';
+            if (scheduleData.length === 0) {
+                scheduleTableContainer.innerHTML = '<p class="text-center text-gray-500">Nenhuma escala para esta data.</p>';
+                return;
+            }
+
+            scheduleData.forEach(dayEntry => {
+                const date = new Date(dayEntry.date + 'T00:00:00');
+                const isEventDay = isEventDayCheckbox.checked;
+                const isOvertimeNeeded = isOvertimeNeededCheckbox.checked;
+                const dayOfWeek = date.getDay();
+                const openingMember = openingMemberSelect.value;
+                const { openingHours } = getWorkHours(isEventDay, isOvertimeNeeded, date);
+
+                const dayHeader = document.createElement('h3');
+                dayHeader.className = 'text-xl font-bold mt-8';
+                dayHeader.textContent = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                scheduleTableContainer.appendChild(dayHeader);
+
+                const table = document.createElement('table');
+                table.className = 'min-w-full divide-y divide-gray-200 mt-2';
+                
+                const thead = table.createTHead();
+                const headerRow = thead.insertRow();
+                const timeHeader = document.createElement('th');
+                timeHeader.textContent = 'Horário';
+                headerRow.appendChild(timeHeader);
+                members.forEach(member => {
+                    const th = document.createElement('th');
+                    th.textContent = member;
+                    headerRow.appendChild(th);
+                });
+
+                const tbody = table.createTBody();
+                
+                const group1Members = isEventDay ? Array.from(group1Select.selectedOptions).map(opt => opt.value) : [];
+                const group2Members = isEventDay ? Array.from(group2Select.selectedOptions).map(opt => opt.value) : [];
+                const group2ScheduleType = group2ScheduleTypeSelect.value;
+                const group2StartHour = group2ScheduleType === '11h-20h' ? 11 : 12;
+                const group2EndHour = group2ScheduleType === '11h-20h' ? 20 : 21;
+                const isWeekend = (dayOfWeek === 6 || dayOfWeek === 0);
+
+                dayEntry.schedule.forEach(entry => {
+                    const row = tbody.insertRow();
+                    const timeCell = row.insertCell();
+                    timeCell.textContent = entry.hour;
+                    
+                    members.forEach(member => {
+                        const cell = row.insertCell();
+                        const select = document.createElement('select');
+                        select.className = 'w-full rounded-md';
+                        const blankOption = document.createElement('option');
+                        blankOption.value = '';
+                        blankOption.textContent = '';
+                        select.appendChild(blankOption);
+                        const allPosts = isEventDayCheckbox.checked ? [...posts] : [...posts];
+                        allPosts.forEach(post => {
+                            const option = document.createElement('option');
+                            option.value = post;
+                            option.textContent = post;
+                            if (entry.assignments[member] === post) {
+                                option.selected = true;
+                            }
+                            select.appendChild(option);
+                        });
+                        cell.appendChild(select);
+
+                        const assignedPost = entry.assignments[member];
+                        const hour = parseFloat(entry.hour.replace(':', '.'));
+
+                        if (assignedPost === 'ALMOÇO') {
+                            cell.classList.add('lunch-cell');
+                        }
+
+                        const isOpeningHour = openingHours.includes(hour);
+                        if (member === openingMember && isOpeningHour) {
+                            cell.classList.add('opening-cell');
+                        }
+
+                        if (isEventDay && isOvertimeNeeded && group1Members.includes(member) && hour >= 18 && hour <= 20) {
+                            select.style.backgroundColor = '#fde68a';
+                            select.title = 'Hora Extra';
+                        }
+                        if (isEventDay) {
+                            if (group2Members.includes(member) && (hour < group2StartHour || hour > group2EndHour)) {
+                                cell.style.backgroundColor = '#d1d5db';
+                                cell.querySelector('select').disabled = true;
+                            } else if (group1Members.includes(member) && (hour < 9 || (hour > 17 && !(isOvertimeNeeded && hour >= 18 && hour <= 20)))) {
+                                cell.style.backgroundColor = '#d1d5db';
+                                cell.querySelector('select').disabled = true;
+                            }
+                        } else {
+                            if (!isWeekend && (hour < 13 || hour > 21)) {
+                                cell.style.backgroundColor = '#d1d5db';
+                                cell.querySelector('select').disabled = true;
+                            } else if (isWeekend && (hour < 9 || hour > 17)) {
+                                cell.style.backgroundColor = '#d1d5db';
+                                cell.querySelector('select').disabled = true;
+                            }
+                        }
+                    });
+                });
+                scheduleTableContainer.appendChild(table);
+            });
+        }
+        
+        function renderExportLayout(dayEntry) {
+             exportLayoutDiv.innerHTML = '';
+             const date = new Date(dayEntry.date + 'T00:00:00');
+             const dayHeader = document.createElement('h3');
+             dayHeader.className = 'text-2xl font-bold mt-8';
+             dayHeader.textContent = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+             exportLayoutDiv.appendChild(dayHeader);
+
+             const table = document.createElement('table');
+             table.className = 'mt-2';
+             
+             const thead = table.createTHead();
+             const headerRow = thead.insertRow();
+             headerRow.innerHTML = `<th>Horário</th>${members.map(m => `<th>${m === openingMemberSelect.value ? `${m} - Abertura` : m}</th>`).join('')}`;
+             
+             const tbody = table.createTBody();
+             const isEventDay = isEventDayCheckbox.checked;
+             const isOvertimeNeeded = isOvertimeNeededCheckbox.checked;
+             const group1Members = isEventDay ? Array.from(group1Select.selectedOptions).map(option => option.value) : [];
+             const group2Members = isEventDay ? Array.from(group2Select.selectedOptions).map(option => option.value) : [];
+             const group2ScheduleType = group2ScheduleTypeSelect.value;
+             const group2StartHour = group2ScheduleType === '11h-20h' ? 11 : 12;
+             const group2EndHour = group2ScheduleType === '11h-20h' ? 20 : 21;
+
+             dayEntry.schedule.forEach(entry => {
+                 const row = tbody.insertRow();
+                 row.innerHTML = `<td>${entry.hour}</td>${members.map(m => {
+                     let post = entry.assignments[m] || '';
+                     let style = '';
+                     const hour = parseFloat(entry.hour.replace(':', '.'));
+
+                     if (isEventDay) {
+                         if (group2Members.includes(m) && (hour < group2StartHour || hour > group2EndHour)) {
+                             post = '';
+                         }
+                         if (group1Members.includes(m) && hour > 20) {
+                             post = '';
+                         }
+                     }
+                     if (post === 'ALMOÇO') {
+                         style = 'background-color: #fce7f3;';
+                     }
+                     if (isEventDay && isOvertimeNeeded && group1Members.includes(m) && hour >= 18 && hour <= 20) {
+                         post = `${post} (EXTRA)`;
+                         style = 'background-color: #fde68a;';
+                     }
+                     if (isEventDay && group1Members.includes(m) && (hour > 17 && !isOvertimeNeeded)) {
+                         post = '';
+                     }
+                     if (m === openingMemberSelect.value && getWorkHours(isEventDay, isOvertimeNeeded, date).openingHours.includes(hour)) {
+                         style = 'background-color: #d1fae5; font-weight: 600;';
+                     }
+                     return `<td style="${style}">${post}</td>`;
+                 }).join('')}`;
+             });
+             exportLayoutDiv.appendChild(table);
+             return html2canvas(exportLayoutDiv, { scale: 2, logging: false }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `escala_${dayEntry.date}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+         }
+
+        async function exportScheduleAsJpg() {
+            if (currentSchedule.length === 0) {
+                showModal("Nenhuma escala para exportar. Por favor, gere uma primeiro.", (confirmed) => {});
+                return;
+            }
+            syncScheduleFromDOM();
+            if (isWeeklyMode) {
+                for (let i = 0; i < currentSchedule.length; i++) {
+                    await renderExportLayout(currentSchedule[i]);
+                }
+            } else {
+                await renderExportLayout(currentSchedule[0]);
+            }
+        }
+
+        function renderExportButtons() {
+            exportDayButtonsDiv.innerHTML = '';
+            const daysOfWeek = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+            currentSchedule.forEach((dayEntry, index) => {
+                const date = new Date(dayEntry.date + 'T00:00:00');
+                const dayName = daysOfWeek[date.getDay()];
+
+                const button = document.createElement('button');
+                button.className = 'btn-secondary text-sm p-2 px-3';
+                button.textContent = `Exportar ${dayName}`;
+                button.addEventListener('click', () => exportSpecificDay(index));
+                exportDayButtonsDiv.appendChild(button);
+            });
+        }
+        
+        async function exportSpecificDay(dayIndex) {
+            syncScheduleFromDOM();
+            if (currentSchedule[dayIndex]) {
+                await renderExportLayout(currentSchedule[dayIndex]);
+            } else {
+                showModal("Dia inválido para exportação.", () => {});
+            }
+        }
+        
+        generateScheduleBtn.addEventListener('click', generateSchedule);
+        saveCloudBtn.addEventListener('click', () => saveScheduleToCloud(creatorName));
+        exportScheduleBtn.addEventListener('click', exportScheduleAsJpg);
+        
+        dailyModeRadio.addEventListener('change', () => {
+             isWeeklyMode = false;
+             renderSchedule(currentSchedule);
+             selectiveExportDiv.classList.add('hidden');
+        });
+        weeklyModeRadio.addEventListener('change', () => {
+             isWeeklyMode = true;
+             renderSchedule(currentSchedule);
+             selectiveExportDiv.classList.remove('hidden');
+             renderExportButtons();
+        });
+        
+        // Initial rendering of fixed members and posts
+        renderMembers();
+        renderPosts();
+
+        if (initialAuthToken) {
+        }
+    </script>
+</body>
+</html>
