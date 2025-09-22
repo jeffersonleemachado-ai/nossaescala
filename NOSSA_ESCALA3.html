@@ -7,93 +7,113 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
+            background-color: #121212;
+            background-image: url('https://raw.githubusercontent.com/google/gemini-web-chat/main/Árvores_no_SESC_Mogi_das_Cruzes_2022_07_06.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #e2e8f0;
         }
         .container {
             max-width: 1200px;
         }
         .card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
+            background-color: rgba(30, 30, 30, 0.85);
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            border: 1px solid #2d3748;
         }
         .table-container {
             overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
         }
         table {
             width: 100%;
             border-collapse: collapse;
         }
         th, td {
-            padding: 0.75rem;
+            padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #2d3748;
         }
         th {
-            background-color: #e5e7eb;
+            background-color: #2d3748;
             font-weight: 600;
-            color: #4b5563;
+            color: #e2e8f0;
         }
         .lunch-cell {
-            background-color: #fce7f3;
+            background-color: #4a192c;
+            color: #fca5a5;
         }
         .opening-cell {
-            background-color: #d1fae5;
+            background-color: #1f3d2f;
             font-weight: 600;
+            color: #99f6e4;
         }
         input[type="text"], input[type="email"], input[type="password"], select {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
+            padding: 0.75rem;
+            border: 1px solid #4a5568;
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-radius: 8px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.5);
         }
         .btn-primary {
             background-color: #10b981;
             color: #ffffff;
             font-weight: 600;
             padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            transition: background-color 0.3s;
+            border-radius: 12px;
+            transition: background-color 0.3s, transform 0.2s;
         }
         .btn-primary:hover {
             background-color: #059669;
+            transform: translateY(-2px);
         }
         .btn-secondary {
-            background-color: #d1d5db;
-            color: #1f2937;
+            background-color: #4a5568;
+            color: #e2e8f0;
             font-weight: 600;
             padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            transition: background-color 0.3s;
+            border-radius: 12px;
+            transition: background-color 0.3s, transform 0.2s;
         }
         .btn-secondary:hover {
-            background-color: #9ca3af;
+            background-color: #2d3748;
+            transform: translateY(-2px);
         }
         .export-layout {
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #1e1e1e;
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
         .export-layout h3 {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 700;
-            color: #1f2937;
+            color: #e2e8f0;
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
         .export-layout table {
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2d3748;
         }
         .export-layout th, .export-layout td {
-            border: 1px solid #e5e7eb;
-            padding: 1rem;
+            border: 1px solid #2d3748;
+            padding: 1.25rem;
         }
         .hidden {
             display: none;
@@ -110,7 +130,7 @@
             display: none;
         }
         .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
+            border: 4px solid rgba(255, 255, 255, 0.1);
             border-left-color: #10b981;
             border-radius: 50%;
             width: 40px;
@@ -120,15 +140,37 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .message-box {
+            background-color: #1e1e1e;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            color: #e2e8f0;
+        }
+        .message-box p {
+            font-size: 1rem;
+            color: #e2e8f0;
+            margin-bottom: 1rem;
+        }
+        .message-box button {
+            background-color: #10b981;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="p-8">
 
     <!-- Seção de Login -->
-    <div id="login-section" class="space-y-6">
-        <div class="card space-y-4">
-            <h1 class="text-4xl font-bold text-gray-800">Nossa Escala</h1>
-            <p class="mt-2 text-lg text-gray-600">Equipe de comunicação - Sesc Mogi das Cruzes</p>
+    <div id="login-section" class="space-y-8">
+        <div class="card space-y-6">
+            <h1 class="text-4xl font-bold text-white">Nossa Escala</h1>
+            <p class="mt-2 text-lg text-gray-400">Equipe de comunicação - Sesc Mogi das Cruzes</p>
             <div id="auth-ui" class="mt-8 space-y-4">
                 <input type="email" id="email-input" placeholder="E-mail (nome de usuário)" class="w-full p-2 border rounded">
                 <input type="password" id="password-input" placeholder="Senha" class="w-full p-2 border rounded">
@@ -136,81 +178,92 @@
                 <button id="signup-btn" class="btn-secondary w-full">Cadastrar</button>
             </div>
             <div id="loading-spinner" class="loading-spinner hidden mx-auto"></div>
-            <p id="user-info" class="text-gray-700 mt-4 hidden">Bem-vindo, <span id="user-name"></span>!</p>
+            <p id="user-info" class="text-gray-400 mt-4 hidden">Bem-vindo, <span id="user-name"></span>!</p>
         </div>
     </div>
 
     <!-- Seção Principal do App -->
-    <div id="main-app" class="container mx-auto space-y-8">
+    <div id="main-app" class="container mx-auto space-y-12">
         <header class="text-center">
-            <h1 class="text-4xl font-bold text-gray-800">Nossa Escala</h1>
-            <p class="mt-2 text-lg text-gray-600">Equipe de comunicação - Sesc Mogi das Cruzes</p>
-            <button id="logout-btn" class="btn-secondary mt-4">Sair</button>
+            <h1 class="text-5xl font-extrabold text-white">Nossa Escala</h1>
+            <p class="mt-4 text-xl text-gray-400">Equipe de comunicação - Sesc Mogi das Cruzes</p>
+            <button id="logout-btn" class="btn-secondary mt-6">Sair</button>
         </header>
 
         <!-- Seção para Adicionar Pessoas e Postos -->
-        <div class="card space-y-4">
-            <h2 class="text-2xl font-bold">Configurações</h2>
-            <div class="grid md:grid-cols-2 gap-6">
+        <div class="card space-y-6">
+            <h2 class="text-3xl font-bold text-white">Configurações</h2>
+            <div class="grid md:grid-cols-2 gap-8">
                 <div>
-                    <h3 class="text-xl font-semibold mb-2">Adicionar Novo Membro</h3>
+                    <h3 class="text-xl font-semibold mb-3">Adicionar Novo Membro</h3>
                     <div class="flex space-x-2">
                         <input type="text" id="newMemberName" placeholder="Nome do membro" class="flex-grow">
                         <button id="addMemberBtn" class="btn-primary">Adicionar</button>
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-xl font-semibold mb-2">Adicionar Novo Posto</h3>
+                    <h3 class="text-xl font-semibold mb-3">Adicionar Novo Posto</h3>
                     <div class="flex space-x-2">
                         <input type="text" id="newPostName" placeholder="Nome do posto" class="flex-grow">
                         <button id="addPostBtn" class="btn-primary">Adicionar</button>
                     </div>
                 </div>
             </div>
-            <div class="grid md:grid-cols-2 gap-6">
+            <div class="grid md:grid-cols-2 gap-8">
                 <div>
-                    <h3 class="text-xl font-semibold mb-2">Membros da Equipe</h3>
-                    <ul id="membersList" class="list-disc list-inside space-y-1"></ul>
+                    <h3 class="text-xl font-semibold mb-3">Membros da Equipe</h3>
+                    <ul id="membersList" class="list-disc list-inside space-y-2"></ul>
                 </div>
                 <div>
-                    <h3 class="text-xl font-semibold mb-2">Postos de Trabalho</h3>
-                    <ul id="postsList" class="list-disc list-inside space-y-1"></ul>
+                    <h3 class="text-xl font-semibold mb-3">Postos de Trabalho</h3>
+                    <ul id="postsList" class="list-disc list-inside space-y-2"></ul>
                 </div>
             </div>
         </div>
 
         <!-- Nova Seção para o Funcionário de Abertura -->
-        <div class="card space-y-4">
-            <h2 class="text-2xl font-bold">Funcionário de Abertura</h2>
+        <div class="card space-y-6">
+            <h2 class="text-3xl font-bold text-white">Funcionário de Abertura</h2>
             <div>
-                <label for="openingMemberSelect" class="block text-sm font-medium text-gray-700">Selecione o membro que fará a abertura:</label>
-                <select id="openingMemberSelect" class="w-full mt-1"></select>
+                <label for="openingMemberSelect" class="block text-sm font-medium text-gray-400">Selecione o membro que fará a abertura:</label>
+                <select id="openingMemberSelect" class="w-full mt-2"></select>
+            </div>
+        </div>
+        
+        <!-- Nova Seção para Atribuir Horário de Almoço -->
+        <div class="card space-y-6">
+            <h2 class="text-3xl font-bold text-white">Atribuir Almoço</h2>
+            <div id="lunchAssignmentFields" class="grid md:grid-cols-2 gap-4">
+                <p class="text-gray-400 col-span-2 text-center">Por favor, selecione uma data para atribuir os horários de almoço.</p>
             </div>
         </div>
 
         <!-- Seção para Criar a Escala -->
-        <div class="card space-y-4">
-            <h2 class="text-2xl font-bold">Criar Escala</h2>
+        <div class="card space-y-6">
+            <h2 class="text-3xl font-bold text-white">Criar Escala</h2>
             <div>
-                <label for="scheduleDate" class="block text-sm font-medium text-gray-700">Data:</label>
-                <input type="date" id="scheduleDate" class="mt-1 block w-full">
+                <label for="scheduleDate" class="block text-sm font-medium text-gray-400">Data:</label>
+                <input type="date" id="scheduleDate" class="mt-2 block w-full">
             </div>
-            <div class="flex items-center space-x-2 mt-4">
-                <input type="checkbox" id="isEventDay" class="form-checkbox h-5 w-5 text-green-600 rounded">
-                <label for="isEventDay" class="text-sm font-medium text-gray-700">Ativar Escala de Evento</label>
-            </div>
+            
+            <!-- Opções de Escala de Evento Geral -->
             <div class="flex items-center space-x-4 mt-4">
-                <label class="text-sm font-medium text-gray-700">Modo de Geração:</label>
-                <div class="flex space-x-2">
+                <input type="checkbox" id="isEventDay" class="form-checkbox h-5 w-5 text-green-600 rounded">
+                <label for="isEventDay" class="text-sm font-medium text-gray-400">Ativar Escala de Evento</label>
+            </div>
+            
+            <div class="flex items-center space-x-6 mt-4">
+                <div class="flex items-center space-x-2">
                     <input type="radio" id="dailyMode" name="schedulePeriod" value="daily" checked>
                     <label for="dailyMode">Diária</label>
+                </div>
+                <div class="flex items-center space-x-2">
                     <input type="radio" id="weeklyMode" name="schedulePeriod" value="weekly">
                     <label for="weeklyMode">Semanal</label>
                 </div>
             </div>
-             <!-- Adding the auto/manual radio buttons back -->
-            <div class="flex items-center space-x-4 mt-4">
-                <label class="text-sm font-medium text-gray-700">Modo de Geração:</label>
+            <div class="flex items-center space-x-6 mt-4">
+                <label class="text-sm font-medium text-gray-400">Modo de Geração:</label>
                 <div class="flex space-x-2">
                     <input type="radio" id="manualMode" name="scheduleMode" value="manual" checked>
                     <label for="manualMode">Manual</label>
@@ -218,67 +271,109 @@
                     <label for="autoMode">Automático</label>
                 </div>
             </div>
-            <div id="generation-info" class="p-3 bg-yellow-100 rounded-md text-sm text-yellow-800 border border-yellow-200 mt-2">
+            
+            <div id="generation-info" class="p-4 bg-yellow-900 rounded-lg text-sm text-yellow-300 border border-yellow-700 mt-2">
                 <p>🔔 **Atenção**</p>
                 <p>A geração automática da escala só funciona corretamente quando o número de postos de trabalho é igual ao número de funcionários disponíveis.</p>
                 <p>⚠️ **Importante:** ALMOÇO não é considerado um posto de trabalho, portanto não deve ser incluído nessa contagem.</p>
             </div>
-            <div id="eventConfig" class="grid md:grid-cols-2 gap-6 hidden">
+            
+            <!-- Configurações para Evento Geral -->
+            <div id="eventConfig" class="grid md:grid-cols-2 gap-8 hidden">
                 <div class="md:col-span-2">
-                    <div class="flex items-center space-x-2">
-                        <input type="checkbox" id="isOvertimeNeeded" class="form-checkbox h-5 w-5 text-indigo-600 rounded">
-                        <label for="isOvertimeNeeded" class="text-sm font-medium text-gray-700">Haverá Hora Extra?</label>
+                    <div class="flex items-center space-x-4">
+                        <input type="checkbox" id="isOvertimeNeeded" class="form-checkbox h-5 w-5 text-purple-600 rounded">
+                        <label for="isOvertimeNeeded" class="text-sm font-medium text-gray-400">Haverá Hora Extra?</label>
                     </div>
                 </div>
-                <div class="md:col-span-2">
-                    <h3 class="text-xl font-semibold mb-2">Horário do Grupo 2</h3>
+                 <div class="md:col-span-2 space-y-4">
+                     <div>
+                        <label for="eventName" class="block text-sm font-medium text-gray-400">Nome do Evento:</label>
+                        <input type="text" id="eventName" placeholder="Nome do Evento" class="mt-2 block w-full">
+                     </div>
+                     <div>
+                        <h3 class="text-xl font-semibold mb-3">Horário do Evento</h3>
+                        <select id="eventTimeSelect" class="w-full">
+                           <option value="18">18h</option>
+                           <option value="19">19h</option>
+                           <option value="20">20h</option>
+                        </select>
+                     </div>
+                </div>
+                <div class="md:col-cols-2">
+                    <h3 class="text-xl font-semibold mb-3">Horário do Grupo 2</h3>
                     <select id="group2ScheduleType" class="w-full">
                         <option value="11h-20h">Entrada 11h / Saída 20h</option>
                         <option value="12h-21h">Entrada 12h / Saída 21h</option>
                     </select>
                 </div>
                 <div>
-                    <h3 class="text-xl font-semibold mb-2">Pessoas do Grupo 1 (Horário Normal)</h3>
-                    <select id="group1Select" multiple class="w-full h-48 border border-gray-300 rounded-md"></select>
+                    <h3 class="text-xl font-semibold mb-3">Pessoas do Grupo 1 (Horário Normal)</h3>
+                    <select id="group1Select" multiple class="w-full h-48 border border-gray-600 rounded-md"></select>
                 </div>
                 <div>
-                    <h3 class="text-xl font-semibold mb-2">Pessoas do Grupo 2 (Horário Estendido)</h3>
-                    <select id="group2Select" multiple class="w-full h-48 border border-gray-300 rounded-md"></select>
+                    <h3 class="text-xl font-semibold mb-3">Pessoas do Grupo 2 (Horário Estendido)</h3>
+                    <select id="group2Select" multiple class="w-full h-48 border border-gray-600 rounded-md"></select>
                 </div>
             </div>
-            <div id="scheduleTableContainer" class="table-container mt-4"></div>
-            <div class="flex space-x-4 mt-4">
+            
+            <!-- Configurações para Show de Quinta -->
+            <div id="thursdayShowConfig" class="space-y-4 hidden">
+                <h3 class="text-xl font-semibold mb-3">Show de Quinta-Feira</h3>
+                <div>
+                    <label for="showNameInput" class="block text-sm font-medium text-gray-400">Nome do Show:</label>
+                    <input type="text" id="showNameInput" placeholder="Ex: Show de Jazz" class="mt-2 block w-full">
+                </div>
+                <div>
+                    <label for="showMemberSelect" class="block text-sm font-medium text-gray-400">Funcionário para o show:</label>
+                    <select id="showMemberSelect" class="w-full mt-2"></select>
+                </div>
+            </div>
+            
+            <div id="scheduleTableContainer" class="table-container mt-6"></div>
+            <div class="flex flex-wrap gap-4 mt-6">
                 <button id="generateScheduleBtn" class="btn-secondary">Gerar Escala</button>
                 <button id="saveCloudBtn" class="btn-primary hidden">Salvar na Nuvem</button>
                 <button id="exportScheduleBtn" class="btn-primary hidden">Exportar como JPG</button>
+                <button id="exportExcelBtn" class="btn-primary hidden">Exportar como Excel</button>
             </div>
         </div>
 
         <!-- Seção de Escalas Salvas na Nuvem -->
-        <div class="card space-y-4">
-            <h2 class="text-2xl font-bold">Escalas Salvas na Nuvem</h2>
+        <div class="card space-y-6">
+            <h2 class="text-3xl font-bold text-white">Escalas Salvas na Nuvem</h2>
             <div class="flex space-x-4">
                 <input type="text" id="filterCreatorInput" placeholder="Filtrar por nome do criador..." class="flex-grow">
                 <button id="filterCreatorBtn" class="btn-secondary">Filtrar</button>
             </div>
-            <div id="cloudSchedulesList" class="space-y-2">
+            <div id="cloudSchedulesList" class="space-y-3">
                 <p id="loading-cloud" class="text-gray-500">Carregando escalas...</p>
             </div>
         </div>
         
         <!-- Nova seção para exportação seletiva -->
-        <div id="selectiveExport" class="card space-y-4 hidden">
-             <h2 class="text-2xl font-bold">Exportar Dias Específicos</h2>
+        <div id="selectiveExport" class="card space-y-6 hidden">
+             <h2 class="text-3xl font-bold text-white">Exportar Dias Específicos</h2>
              <div id="exportDayButtons" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        </div>
+
+        <!-- Dashboard de Histórico de Postos (Novidade) -->
+        <div class="card space-y-6">
+            <h2 class="text-3xl font-bold text-white">Análise de Distribuição de Postos</h2>
+            <div id="chartContainer" class="bg-gray-800 p-6 rounded-lg">
+                <p class="text-gray-400 mb-4">Mantenha a rotação de postos justa. Este gráfico mostra quantas vezes cada funcionário foi escalado para cada posto nas últimas 4 semanas.</p>
+                <canvas id="postDistributionChart"></canvas>
+            </div>
+            <button id="exportAnalysisBtn" class="btn-secondary w-full">Exportar Análise (JPG)</button>
         </div>
 
     </div>
 
-    <!-- Modal de Confirmação -->
-    <div id="modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
-            <p id="modalMessage" class="text-center text-lg font-medium text-gray-800 mb-4"></p>
-            <div class="flex justify-center space-x-4">
+    <!-- Modal de Confirmação e Mensagens -->
+    <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center p-4">
+        <div class="message-box">
+            <p id="modalMessage" class="text-center font-medium mb-4"></p>
+            <div class="flex justify-center space-x-4" id="modalButtons">
                 <button id="modalConfirmBtn" class="btn-primary">Sim</button>
                 <button id="modalCancelBtn" class="btn-secondary">Cancelar</button>
             </div>
@@ -290,31 +385,17 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Cole suas credenciais do Firebase aqui.
-        // Você pode encontrar isso em: Firebase Console > Configurações do projeto > Geral > Seus apps
-        const firebaseConfig = {
-            apiKey: "AIzaSyBjijApmc5SC0Xc9dkJDhoq4pBUTInu-zw",
-    authDomain: "gerador-de-escalas---sesc-mogi.firebaseapp.com",
-    projectId: "gerador-de-escalas---sesc-mogi",
-    storageBucket: "gerador-de-escalas---sesc-mogi.firebasestorage.app",
-    messagingSenderId: "555087427994",
-    appId: "1:555087427994:web:30a3227ea79983789c2223",
-    measurementId: "G-008XLSTP98"
-        };
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, addDoc, getDocs, deleteDoc, getDocs as getDocsFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // Global variables provided by the environment
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // --- Firebase Initialization ---
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- DOM Elements ---
         const loginSection = document.getElementById('login-section');
         const mainApp = document.getElementById('main-app');
         const emailInput = document.getElementById('email-input');
@@ -329,7 +410,6 @@
         const loadingCloud = document.getElementById('loading-cloud');
         const filterCreatorInput = document.getElementById('filterCreatorInput');
         const filterCreatorBtn = document.getElementById('filterCreatorBtn');
-
         const newMemberNameInput = document.getElementById('newMemberName');
         const addMemberBtn = document.getElementById('addMemberBtn');
         const membersList = document.getElementById('membersList');
@@ -346,60 +426,81 @@
         const generateScheduleBtn = document.getElementById('generateScheduleBtn');
         const saveCloudBtn = document.getElementById('saveCloudBtn');
         const exportScheduleBtn = document.getElementById('exportScheduleBtn');
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
         const scheduleTableContainer = document.getElementById('scheduleTableContainer');
         const exportLayoutDiv = document.getElementById('exportLayout');
         const modal = document.getElementById('modal');
         const modalMessage = document.getElementById('modalMessage');
         const modalConfirmBtn = document.getElementById('modalConfirmBtn');
         const modalCancelBtn = document.getElementById('modalCancelBtn');
-
+        const modalButtons = document.getElementById('modalButtons');
         const openingMemberSelect = document.getElementById('openingMemberSelect');
-
         const dailyModeRadio = document.getElementById('dailyMode');
         const weeklyModeRadio = document.getElementById('weeklyMode');
         const schedulePeriodRadios = document.getElementsByName('schedulePeriod');
         const manualModeRadio = document.getElementById('manualMode');
         const autoModeRadio = document.getElementById('autoMode');
-        
         const selectiveExportDiv = document.getElementById('selectiveExport');
         const exportDayButtonsDiv = document.getElementById('exportDayButtons');
-
+        const eventNameInput = document.getElementById('eventName');
+        const eventTimeSelect = document.getElementById('eventTimeSelect');
+        const thursdayShowConfigDiv = document.getElementById('thursdayShowConfig');
+        const showNameInput = document.getElementById('showNameInput');
+        const showMemberSelect = document.getElementById('showMemberSelect');
+        const lunchAssignmentFields = document.getElementById('lunchAssignmentFields');
+        const postDistributionChartCanvas = document.getElementById('postDistributionChart');
+        const exportAnalysisBtn = document.getElementById('exportAnalysisBtn');
+        const chartContainer = document.getElementById('chartContainer');
 
         let userId = null;
         let members = ['Lee', 'Carol', 'Mari', 'Ju', 'Karen', 'Robert'];
-        let posts = ['P1', 'CATRACA', 'VESTIÁRIO', 'SOÇAITE', 'TENDA', 'PDV', 'ALMOÇO'];
+        let posts = ['P1', 'CATRACA', 'VESTIÁRIO', 'SOÇAITE', 'TENDA', 'PDV', 'ALMOÇO', 'CIRCULAÇÃO'];
         let currentSchedule = [];
         let lastPostAssignment = {};
         let allCloudSchedules = [];
         let creatorName = '';
         let openingMember = null;
         let isWeeklyMode = false;
+        let postHistory = {};
+        let chartInstance = null;
 
-        function showApp() {
+        async function showApp() {
             loginSection.style.display = 'none';
             mainApp.style.display = 'block';
+            addMemberBtn.disabled = false;
+            await loadPostHistory();
         }
 
-        function showLogin() {
+        async function showLogin() {
             loginSection.style.display = 'flex';
             mainApp.style.display = 'none';
+            addMemberBtn.disabled = true;
         }
 
-        function showModal(message, callback) {
+        function showModal(message, callback, isConfirm = true) {
             modalMessage.textContent = message;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            modalConfirmBtn.onclick = () => {
-                modal.classList.add('hidden');
-                callback(true);
-            };
-            modalCancelBtn.onclick = () => {
-                modal.classList.add('hidden');
-                callback(false);
-            };
+            
+            if (isConfirm) {
+                modalButtons.style.display = 'flex';
+                modalConfirmBtn.onclick = () => {
+                    modal.classList.add('hidden');
+                    callback(true);
+                };
+                modalCancelBtn.onclick = () => {
+                    modal.classList.add('hidden');
+                    callback(false);
+                };
+            } else {
+                modalButtons.style.display = 'none';
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    callback();
+                }, 2000);
+            }
         }
 
-        // --- Firebase Auth & Firestore Logic ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userId = user.uid;
@@ -407,16 +508,23 @@
                 userNameSpan.textContent = creatorName;
                 userInfo.classList.remove('hidden');
                 showApp();
-                setTimeout(async () => {
-                    await loadUserData();
-                    listenToCloudSchedules();
-                }, 1000);
+                await loadUserData();
+                listenToCloudSchedules();
             } else {
                 userId = null;
                 showLogin();
             }
             loadingSpinner.classList.add('hidden');
         });
+
+        if (initialAuthToken) {
+            signInWithCustomToken(auth, initialAuthToken).catch(e => {
+                console.error("Erro ao autenticar com token personalizado:", e);
+                signInAnonymously(auth);
+            });
+        } else {
+            signInAnonymously(auth);
+        }
 
         loginBtn.addEventListener('click', async () => {
             const email = emailInput.value;
@@ -425,7 +533,7 @@
             try {
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                showModal("Erro ao fazer login: " + error.message, () => {});
+                showModal("Erro ao fazer login: " + error.message, () => {}, false);
                 loadingSpinner.classList.add('hidden');
             }
         });
@@ -436,9 +544,9 @@
             loadingSpinner.classList.remove('hidden');
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
-                showModal("Conta criada com sucesso! Você já está logado.", () => {});
+                showModal("Conta criada com sucesso! Você já está logado.", () => {}, false);
             } catch (error) {
-                showModal("Erro ao criar conta: " + error.message, () => {});
+                showModal("Erro ao criar conta: " + error.message, () => {}, false);
             } finally {
                 loadingSpinner.classList.add('hidden');
             }
@@ -446,10 +554,9 @@
         
         logoutBtn.addEventListener('click', async () => {
             await signOut(auth);
-            showModal("Desconectado com sucesso.", () => {});
+            showModal("Desconectado com sucesso.", () => {}, false);
         });
 
-        // --- Firestore Data Operations ---
         async function loadUserData() {
             if (!userId) return;
             const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
@@ -480,9 +587,88 @@
             }
         }
         
+        async function loadPostHistory() {
+            if (!userId) return;
+            const schedulesCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'schedules');
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
+            
+            const querySnapshot = await getDocsFirestore(schedulesCollectionRef);
+            
+            let tempHistory = {};
+            members.forEach(member => {
+                tempHistory[member] = {};
+                posts.forEach(post => {
+                    tempHistory[member][post] = 0;
+                });
+            });
+
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                const scheduleDate = new Date(data.date);
+                if (scheduleDate > thirtyDaysAgo) {
+                    const schedules = JSON.parse(data.schedule);
+                    schedules.forEach(daySchedule => {
+                         daySchedule.schedule.forEach(hourEntry => {
+                            for (const member in hourEntry.assignments) {
+                                const post = hourEntry.assignments[member];
+                                if (tempHistory[member] && tempHistory[member][post] !== undefined) {
+                                    tempHistory[member][post]++;
+                                }
+                            }
+                         });
+                    });
+                }
+            });
+            
+            postHistory = tempHistory;
+            renderPostDistributionChart();
+        }
+
+        function renderPostDistributionChart() {
+            const chartData = {
+                labels: members,
+                datasets: []
+            };
+
+            const postColors = {
+                'P1': '#FF6384', 'CATRACA': '#36A2EB', 'VESTIÁRIO': '#FFCE56', 'SOÇAITE': '#4BC0C0', 
+                'TENDA': '#9966FF', 'PDV': '#FF9F40', 'CIRCULAÇÃO': '#FF5733', 'SHOW DE QUINTA': '#76D7C4',
+                'BIPAGEM': '#FFC0CB', 'PCD': '#DA70D6', 'GEODÉSICA': '#8A2BE2'
+            };
+
+            posts.filter(p => p !== 'ALMOÇO').forEach(post => {
+                const data = members.map(member => postHistory[member]?.[post] || 0);
+                chartData.datasets.push({
+                    label: post,
+                    data: data,
+                    backgroundColor: postColors[post] || '#C9CBCE',
+                });
+            });
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(postDistributionChartCanvas, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { stacked: true, grid: { color: '#4a5568' } },
+                        y: { stacked: true, beginAtZero: true, grid: { color: '#4a5568' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#e2e8f0' } }
+                    }
+                }
+            });
+        }
+
         async function saveScheduleToCloud(creator) {
             if (!userId || currentSchedule.length === 0 || !scheduleDateInput.value) {
-                showModal("Por favor, gere uma escala e faça o login para salvar.", () => {});
+                showModal("Por favor, gere uma escala e faça o login para salvar.", () => {}, false);
                 return;
             }
             syncScheduleFromDOM();
@@ -499,12 +685,15 @@
                     posts: posts,
                     userId: userId,
                     creator: creator,
-                    isWeekly: isWeeklyMode
+                    isWeekly: isWeeklyMode,
+                    eventName: eventNameInput.value,
+                    eventTime: eventTimeSelect.value
                 });
-                showModal("Escala salva na nuvem com sucesso!", () => {});
+                showModal("Escala salva na nuvem com sucesso!", () => {}, false);
+                loadPostHistory();
             } catch (e) {
                 console.error("Erro ao salvar a escala na nuvem: ", e);
-                showModal("Ocorreu um erro ao salvar a escala na nuvem.", () => {});
+                showModal("Ocorreu um erro ao salvar a escala na nuvem.", () => {}, false);
             }
         }
 
@@ -525,15 +714,17 @@
             } else {
                 filteredSchedules.forEach(data => {
                     const item = document.createElement('div');
-                    item.className = 'flex justify-between items-center bg-gray-100 p-3 rounded-md';
+                    item.className = 'flex justify-between items-center bg-gray-700 p-3 rounded-lg border border-gray-600 text-gray-200';
                     const displayDate = data.isWeekly ? `Semana de ${new Date(data.date).toLocaleDateString('pt-BR')}` : new Date(data.date).toLocaleDateString('pt-BR');
                     item.innerHTML = `
-                        <span class="font-medium">${displayDate} (Criado por: ${data.creator})</span>
-                        <div>
-                            <button class="load-cloud-btn btn-primary text-sm p-1 px-3" data-id="${data.id}">Carregar</button>
-                            <button class="delete-cloud-btn text-red-500 hover:text-red-700 text-sm p-1 px-3" data-id="${data.id}">Excluir</button>
+                        <span class="font-medium text-gray-200">${displayDate} (Criado por: ${data.creator})</span>
+                        <div class="space-x-2">
+                            <button class="load-cloud-btn btn-primary text-sm p-1 px-3">Carregar</button>
+                            <button class="delete-cloud-btn text-red-400 hover:text-red-300 text-sm p-1 px-3">Excluir</button>
                         </div>
                     `;
+                    item.querySelector('.load-cloud-btn').dataset.id = data.id;
+                    item.querySelector('.delete-cloud-btn').dataset.id = data.id;
                     cloudSchedulesList.appendChild(item);
                 });
             }
@@ -560,7 +751,7 @@
                     isWeeklyMode = data.isWeekly;
                     currentSchedule = JSON.parse(data.schedule);
                     scheduleDateInput.value = data.date;
-                    isEventDayCheckbox.checked = posts.includes('SHOW');
+                    isEventDayCheckbox.checked = posts.includes('BIPAGEM');
                     eventConfigDiv.classList.toggle('hidden', !isEventDayCheckbox.checked);
                     renderMembers();
                     renderPosts();
@@ -570,9 +761,12 @@
                     } else {
                         dailyModeRadio.checked = true;
                     }
-                    showModal("Escala carregada da nuvem com sucesso!", () => {});
+                    saveCloudBtn.classList.remove('hidden');
+                    exportScheduleBtn.classList.remove('hidden');
+                    exportExcelBtn.classList.remove('hidden');
+                    showModal("Escala carregada da nuvem com sucesso!", () => {}, false);
                 } else {
-                    showModal("Escala não encontrada na nuvem.", () => {});
+                    showModal("Escala não encontrada na nuvem.", () => {}, false);
                 }
             } else if (target.classList.contains('delete-cloud-btn')) {
                 showModal("Tem certeza que deseja excluir esta escala? Esta ação é irreversível.", async (confirmed) => {
@@ -580,30 +774,89 @@
                         try {
                             const scheduleDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', scheduleId);
                             await deleteDoc(scheduleDocRef);
-                            showModal("Escala excluída com sucesso.", () => {});
+                            showModal("Escala excluída com sucesso.", () => {}, false);
                         } catch (e) {
                             console.error("Erro ao excluir a escala: ", e);
-                            showModal("Ocorreu um erro ao excluir a escala.", () => {});
+                            showModal("Ocorreu um erro ao excluir a escala.", () => {}, false);
                         }
                     }
                 });
             }
         });
         
-        // --- Remaining app logic from original file ---
+        function getLunchHoursForDate(date) {
+            const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+            if (dayOfWeek === 6 || dayOfWeek === 0) {
+                return [12, 13, 14, 15];
+            }
+            return [16, 17, 18, 19];
+        }
+
+        function renderLunchAssignmentFields() {
+            lunchAssignmentFields.innerHTML = '';
+            const selectedDate = scheduleDateInput.value;
+            if (!selectedDate) {
+                 lunchAssignmentFields.innerHTML = '<p class="text-gray-400 col-span-2 text-center">Por favor, selecione uma data para atribuir os horários de almoço.</p>';
+                 return;
+            }
+            
+            const isEventDay = isEventDayCheckbox.checked;
+            const group1Members = isEventDay ? Array.from(group1Select.selectedOptions).map(opt => opt.value) : [];
+            const group2Members = isEventDay ? Array.from(group2Select.selectedOptions).map(opt => opt.value) : [];
+
+            members.forEach(member => {
+                const field = document.createElement('div');
+                field.className = 'flex flex-col space-y-1';
+                const label = document.createElement('label');
+                label.className = 'text-sm font-medium text-gray-400';
+                label.textContent = member;
+                const select = document.createElement('select');
+                select.id = `lunch-${member.replace(/\s/g, '-')}`;
+                select.className = 'w-full rounded-md bg-gray-700 text-gray-200';
+                
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Automático';
+                select.appendChild(defaultOption);
+
+                let lunchHours = [];
+                if (isEventDay) {
+                    if (group1Members.includes(member)) {
+                        lunchHours = [12, 13, 14, 15];
+                    } else if (group2Members.includes(member)) {
+                        lunchHours = [15, 16];
+                    }
+                } else {
+                    lunchHours = getLunchHoursForDate(selectedDate);
+                }
+
+                lunchHours.forEach(hour => {
+                    const option = document.createElement('option');
+                    option.value = hour;
+                    option.textContent = `${hour}h`;
+                    select.appendChild(option);
+                });
+
+                field.appendChild(label);
+                field.appendChild(select);
+                lunchAssignmentFields.appendChild(field);
+            });
+        }
+
         function renderMembers() {
             membersList.innerHTML = '';
             group1Select.innerHTML = '';
             group2Select.innerHTML = '';
             openingMemberSelect.innerHTML = '';
-            members.forEach((member, index) => {
+            showMemberSelect.innerHTML = '';
+            members.forEach(member => {
                 const li = document.createElement('li');
-                li.className = 'flex justify-between items-center';
+                li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-md';
                 li.textContent = member;
                 const removeBtn = document.createElement('button');
                 removeBtn.textContent = 'Remover';
-                removeBtn.className = 'text-red-500 hover:text-red-700 text-sm';
-                removeBtn.onclick = () => removeMember(index);
+                removeBtn.className = 'text-red-400 hover:text-red-300 text-sm';
+                removeBtn.onclick = () => removeMember(member);
                 li.appendChild(removeBtn);
                 membersList.appendChild(li);
 
@@ -621,11 +874,21 @@
                 openingOption.value = member;
                 openingOption.textContent = member;
                 openingMemberSelect.appendChild(openingOption);
+
+                const showOption = document.createElement('option');
+                showOption.value = member;
+                showOption.textContent = member;
+                showMemberSelect.appendChild(showOption);
             });
             saveUserData();
+            renderLunchAssignmentFields();
         }
 
         function addMember() {
+            if (!userId) {
+                showModal("Você precisa estar logado para adicionar membros.", () => {}, false);
+                return;
+            }
             const name = newMemberNameInput.value.trim();
             if (name && !members.includes(name)) {
                 members.push(name);
@@ -634,10 +897,10 @@
             }
         }
 
-        function removeMember(index) {
-            showModal('Tem certeza que deseja remover este membro?', (confirmed) => {
+        function removeMember(memberToRemove) {
+            showModal(`Tem certeza que deseja remover ${memberToRemove}?`, (confirmed) => {
                 if (confirmed) {
-                    members.splice(index, 1);
+                    members = members.filter(member => member !== memberToRemove);
                     renderMembers();
                 }
             });
@@ -650,17 +913,16 @@
 
         function renderPosts() {
             postsList.innerHTML = '';
-            posts.forEach((post, index) => {
+            posts.forEach((post) => {
                 const li = document.createElement('li');
-                li.className = 'flex justify-between items-center';
-                li.textContent = post;
-                const fixedPosts = ['ALMOÇO', 'P1', 'VESTIÁRIO'];
-                if (!fixedPosts.includes(post)) {
-                    const removeBtn = document.createElement('button');
-                    removeBtn.textContent = 'Remover';
-                    removeBtn.className = 'text-red-500 hover:text-red-700 text-sm';
-                    removeBtn.onclick = () => removePost(index);
-                    li.appendChild(removeBtn);
+                li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-md';
+                li.innerHTML = `
+                    <span>${post}</span>
+                    ${!['ALMOÇO', 'P1', 'VESTIÁRIO', 'SHOW DE QUINTA'].includes(post) ? `<button class="text-red-400 hover:text-red-300 text-sm" data-post="${post}">Remover</button>` : ''}
+                `;
+                const removeBtn = li.querySelector('button');
+                if (removeBtn) {
+                    removeBtn.onclick = () => removePost(post);
                 }
                 postsList.appendChild(li);
             });
@@ -676,10 +938,10 @@
             }
         }
 
-        function removePost(index) {
-            showModal('Tem certeza que deseja remover este posto?', (confirmed) => {
+        function removePost(postToRemove) {
+            showModal(`Tem certeza que deseja remover o posto ${postToRemove}?`, (confirmed) => {
                 if (confirmed) {
-                    posts.splice(index, 1);
+                    posts = posts.filter(post => post !== postToRemove);
                     renderPosts();
                 }
             });
@@ -692,19 +954,52 @@
         
         isEventDayCheckbox.addEventListener('change', () => {
             if (isEventDayCheckbox.checked) {
-                if (!posts.includes('SHOW')) {
-                    posts.push('SHOW');
-                }
-                eventConfigDiv.classList.remove('hidden');
-            } else {
+                manualModeRadio.checked = true;
+                autoModeRadio.disabled = true;
                 const showIndex = posts.indexOf('SHOW');
                 if (showIndex > -1) {
                     posts.splice(showIndex, 1);
                 }
+                ['BIPAGEM', 'PCD', 'GEODÉSICA'].forEach(p => {
+                    if (!posts.includes(p)) {
+                        posts.push(p);
+                    }
+                });
+                eventConfigDiv.classList.remove('hidden');
+            } else {
+                 autoModeRadio.disabled = false;
+                 const bipagemIndex = posts.indexOf('BIPAGEM');
+                 if(bipagemIndex > -1) { posts.splice(bipagemIndex, 1); }
+                 const pcdIndex = posts.indexOf('PCD');
+                 if(pcdIndex > -1) { posts.splice(pcdIndex, 1); }
+                 const geodesicIndex = posts.indexOf('GEODÉSICA');
+                 if(geodesicIndex > -1) { posts.splice(geodesicIndex, 1); }
                 eventConfigDiv.classList.add('hidden');
             }
             renderPosts();
             renderSchedule(currentSchedule, scheduleDateInput.value);
+            renderLunchAssignmentFields();
+        });
+
+        scheduleDateInput.addEventListener('change', () => {
+            const selectedDate = new Date(scheduleDateInput.value + 'T00:00:00');
+            const dayOfWeek = selectedDate.getDay();
+            if (dayOfWeek === 4) {
+                thursdayShowConfigDiv.classList.remove('hidden');
+                const showDeQuintaIndex = posts.indexOf('SHOW DE QUINTA');
+                if(showDeQuintaIndex === -1) {
+                    posts.push('SHOW DE QUINTA');
+                    renderPosts();
+                }
+            } else {
+                thursdayShowConfigDiv.classList.add('hidden');
+                const showDeQuintaIndex = posts.indexOf('SHOW DE QUINTA');
+                if(showDeQuintaIndex > -1) {
+                    posts.splice(showDeQuintaIndex, 1);
+                    renderPosts();
+                }
+            }
+            renderLunchAssignmentFields();
         });
         
         function formatHour(hourNumber) {
@@ -759,7 +1054,7 @@
                     allWorkHours = normalHours;
                 }
             } else {
-                showModal("A escala é gerada apenas para Terça-feira a Domingo.", (confirmed) => {});
+                showModal("A escala é gerada apenas para Terça-feira a Domingo.", () => {}, false);
                 return null;
             }
             
@@ -768,8 +1063,8 @@
 
         function generateSchedule() {
             const selectedDate = scheduleDateInput.value;
-            if (!selectedDate || members.length === 0 || posts.length < 3) {
-                showModal("Por favor, selecione uma data e adicione membros e postos (incluindo P1 e VESTIÁRIO).", (confirmed) => {});
+            if (!selectedDate || members.length === 0 || posts.filter(p => p !== 'ALMOÇO').length < 3) {
+                showModal("Por favor, selecione uma data e adicione membros e postos (incluindo P1 e VESTIÁRIO).", () => {}, false);
                 return;
             }
             const isEventDay = isEventDayCheckbox.checked;
@@ -791,7 +1086,7 @@
                 if (isAutomatic) {
                      currentSchedule = [{ date: selectedDate, schedule: generateAutomaticDailySchedule(allWorkHours, members, posts, date)}];
                 } else {
-                    currentSchedule = [{ date: selectedDate, schedule: generateManualDailySchedule(allWorkHours, members, posts, isEventDay)}];
+                    currentSchedule = [{ date: selectedDate, schedule: generateManualDailyDailySchedule(allWorkHours, members, posts, isEventDay)}];
                 }
                 renderSchedule(currentSchedule);
                 selectiveExportDiv.classList.add('hidden');
@@ -799,9 +1094,10 @@
 
             saveCloudBtn.classList.remove('hidden');
             exportScheduleBtn.classList.remove('hidden');
+            exportExcelBtn.classList.remove('hidden');
         }
 
-        function generateManualDailySchedule(allWorkHours, members, posts, isEventDay) {
+        function generateManualDailyDailySchedule(allWorkHours, members, posts, isEventDay) {
             return allWorkHours.map(hour => ({
                 hour: formatHour(hour),
                 assignments: {}
@@ -820,7 +1116,7 @@
                     if (isAutomatic) {
                         dailySchedule = generateAutomaticDailySchedule(allWorkHours, members, posts, date);
                     } else {
-                        dailySchedule = generateManualDailySchedule(allWorkHours, members, posts, isEventDay);
+                        dailySchedule = generateManualDailyDailySchedule(allWorkHours, members, posts, isEventDay);
                     }
                     weeklySchedule.push({
                         date: date.toISOString().split('T')[0],
@@ -832,129 +1128,148 @@
             return weeklySchedule;
         }
 
-
         function generateAutomaticDailySchedule(allWorkHours, members, posts, date) {
             const schedule = [];
-            
-            const isEventDay = isEventDayCheckbox.checked;
-            const isOvertimeNeeded = isOvertimeNeededCheckbox.checked;
-            const group1Members = isEventDay ? Array.from(group1Select.selectedOptions).map(opt => opt.value) : [];
-            const group2Members = isEventDay ? Array.from(group2Select.selectedOptions).map(opt => opt.value) : [];
-            
-            const lunchAssignments = {};
             const dayOfWeek = date.getDay();
-            const isWeekday = dayOfWeek >= 2 && dayOfWeek <= 5;
+            const isThursday = dayOfWeek === 4;
+            const showMember = showMemberSelect.value;
             
-            const totalMembers = members.length;
-            const shuffledMembers = [...members].sort(() => 0.5 - Math.random());
+            const lastPost = {};
+            const lunchAssignments = {};
+            const allPosts = posts.filter(p => p !== 'ALMOÇO');
             
-            let lunchHours = [];
-            if (isEventDay) {
-                const group1LunchOptions = [12, 13, 14];
-                group1Members.forEach(member => {
-                    const hour = group1LunchOptions[Math.floor(Math.random() * group1LunchOptions.length)];
-                    if (!lunchAssignments[member]) {
-                        lunchAssignments[member] = hour;
+            // Atribuição manual de almoço
+            let manualLunchAssignments = {};
+            members.forEach(member => {
+                const selectElement = document.getElementById(`lunch-${member.replace(/\s/g, '-')}`);
+                if (selectElement && selectElement.value) {
+                    manualLunchAssignments[member] = parseFloat(selectElement.value);
+                }
+            });
+
+            let lunchSlots = {};
+            const maxPerLunch = members.length > 4 ? 2 : 1;
+
+            let allLunchHours = getLunchHoursForDate(date);
+            
+            members.forEach(member => {
+                const assignedHour = manualLunchAssignments[member] || null;
+                if (assignedHour) {
+                    if (!lunchSlots[assignedHour]) lunchSlots[assignedHour] = 0;
+                    if (lunchSlots[assignedHour] < maxPerLunch) {
+                        lunchAssignments[member] = assignedHour;
+                        lunchSlots[assignedHour]++;
                     }
-                });
-                const group2LunchOptions = [15, 16];
-                group2Members.forEach(member => {
-                    const hour = group2LunchOptions[Math.floor(Math.random() * group2LunchOptions.length)];
-                    if (!lunchAssignments[member]) {
-                        lunchAssignments[member] = hour;
-                    }
-                });
-            } else {
-                lunchHours = isWeekday ? [16, 17, 18, 19] : [12, 13, 14, 15];
-                let lunchesPerHour = totalMembers > 4 ? 2 : 1;
-                let lunchCount = 0;
-                for (let i = 0; i < totalMembers; i++) {
-                     const member = shuffledMembers[i];
-                     const randomLunchHour = lunchHours[Math.floor(Math.random() * lunchHours.length)];
-                     lunchAssignments[member] = randomLunchHour;
-                 }
-            }
+                }
+            });
+
+            let unassignedMembers = members.filter(m => !lunchAssignments[m]);
+            unassignedMembers.sort(() => 0.5 - Math.random());
+            let currentLunchHourIndex = 0;
             
+            // Atribuição automática de almoço para quem não foi definido manualmente
+            unassignedMembers.forEach(member => {
+                let assigned = false;
+                for (let i = 0; i < allLunchHours.length; i++) {
+                    const hour = allLunchHours[currentLunchHourIndex % allLunchHours.length];
+                    if (!lunchSlots[hour]) lunchSlots[hour] = 0;
+                    if (lunchSlots[hour] < maxPerLunch) {
+                        lunchAssignments[member] = hour;
+                        lunchSlots[hour]++;
+                        assigned = true;
+                        break;
+                    }
+                    currentLunchHourIndex++;
+                }
+            });
+            
+            // Lógica principal de atribuição de postos
             allWorkHours.forEach(hour => {
                 const assignments = {};
-                let membersToAssign = [...members].sort(() => 0.5 - Math.random());
-                const availablePosts = [...posts].filter(p => p !== 'ALMOÇO');
-                const priorityPosts = ['P1', 'VESTIÁRIO', 'CATRACA'];
-                const openingMember = openingMemberSelect.value;
-                const { openingHours } = getWorkHours(isEventDay, isOvertimeNeeded, date);
-                const isOpeningHour = openingHours.includes(hour);
-
+                let membersToAssign = [...members];
+                
+                // Atribuição do Show de Quinta
+                if (isThursday && hour >= 20 && hour <= 21 && showMember) {
+                    assignments[showMember] = 'SHOW DE QUINTA';
+                    membersToAssign = membersToAssign.filter(m => m !== showMember);
+                    lastPost[showMember] = 'SHOW DE QUINTA';
+                }
+                
+                // Atribuição do Almoço
                 membersToAssign = membersToAssign.filter(member => {
                     if (lunchAssignments[member] === hour) {
-                        assignments[member] = 'ALMOÇO';
-                        lastPostAssignment[member] = 'ALMOÇO';
-                        return false; 
+                         assignments[member] = 'ALMOÇO';
+                         lastPost[member] = 'ALMOÇO';
+                         return false;
                     }
                     return true;
                 });
                 
                 let remainingMembers = membersToAssign;
-                let availableNormalPosts = availablePosts.filter(p => !priorityPosts.includes(p));
-
-                if (isOpeningHour && openingMember && remainingMembers.includes(openingMember)) {
-                    assignments[openingMember] = 'P1';
-                    lastPostAssignment[openingMember] = 'P1';
-                    remainingMembers = remainingMembers.filter(m => m !== openingMember);
-                }
-
-                if (isEventDay && parseFloat(hour) >= 18) {
-                    remainingMembers.forEach(member => {
-                        assignments[member] = 'SHOW';
-                        lastPostAssignment[member] = 'SHOW';
-                    });
-                    remainingMembers = [];
-                }
-
-                priorityPosts.forEach(post => {
-                    if (remainingMembers.length === 0) return;
-                    const availableMembers = remainingMembers.filter(member => lastPostAssignment[member] !== post);
-                    if (availableMembers.length > 0) {
-                        const memberToAssign = availableMembers[0];
-                        assignments[memberToAssign] = post;
-                        lastPostAssignment[memberToAssign] = post;
-                        remainingMembers = remainingMembers.filter(m => m !== memberToAssign);
-                    }
-                });
-
                 let usedPostsThisHour = Object.values(assignments);
-                let remainingPostsToAssign = availableNormalPosts.filter(p => !usedPostsThisHour.includes(p));
+                const priorityPosts = ['P1', 'VESTIÁRIO', 'CATRACA', 'CIRCULAÇÃO'];
+                
+                // Atribuição da Abertura (prioridade máxima)
+                const openingMember = openingMemberSelect.value;
+                const workHoursData = getWorkHours(isEventDayCheckbox.checked, false, date);
+                if (openingMember && remainingMembers.includes(openingMember) && workHoursData.openingHours.includes(hour)) {
+                    if (!usedPostsThisHour.includes('P1')) {
+                        assignments[openingMember] = 'P1';
+                        remainingMembers = remainingMembers.filter(m => m !== openingMember);
+                        lastPost[openingMember] = 'P1';
+                        usedPostsThisHour.push('P1');
+                    }
+                }
 
-                remainingMembers.forEach(member => {
+                // Atribuição de postos prioritários
+                const availablePriorityPosts = priorityPosts.filter(p => !usedPostsThisHour.includes(p));
+                const shuffledRemainingMembers = [...remainingMembers].sort(() => 0.5 - Math.random());
+                
+                availablePriorityPosts.forEach(post => {
+                    if (shuffledRemainingMembers.length === 0) return;
+                    const memberToAssign = shuffledRemainingMembers.shift();
+                    assignments[memberToAssign] = post;
+                    lastPost[memberToAssign] = post;
+                    usedPostsThisHour.push(post);
+                });
+                
+                // Atribuição de outros postos
+                let nonPriorityPosts = allPosts.filter(p => !usedPostsThisHour.includes(p));
+                let shuffledNonPriorityPosts = [...nonPriorityPosts].sort(() => 0.5 - Math.random());
+
+                shuffledRemainingMembers.forEach(member => {
+                     // Lógica de revezamento aprimorada
                     let postToAssign = null;
-                    const potentialPosts = remainingPostsToAssign.filter(p => lastPostAssignment[member] !== p);
-                    
-                    if (potentialPosts.length > 0) {
-                        postToAssign = potentialPosts[0];
-                    } else if (remainingPostsToAssign.length > 0) {
-                        postToAssign = remainingPostsToAssign[0];
-                    } else {
-                        const availableFallbackPosts = availablePosts.filter(p => lastPostAssignment[member] !== p);
-                        if(availableFallbackPosts.length > 0){
-                            postToAssign = availableFallbackPosts[0];
-                        } else {
-                            postToAssign = availablePosts[0];
+                    const postHistoryForMember = postHistory[member] || {};
+                    const postsByUsage = [...shuffledNonPriorityPosts].sort((a, b) => (postHistoryForMember[a] || 0) - (postHistoryForMember[b] || 0));
+
+                    for (const post of postsByUsage) {
+                         if (post !== lastPost[member]) {
+                            postToAssign = post;
+                            break;
                         }
                     }
                     
                     if (postToAssign) {
                         assignments[member] = postToAssign;
-                        lastPostAssignment[member] = postToAssign;
-                        remainingPostsToAssign = remainingPostsToAssign.filter(p => p !== postToAssign);
+                        lastPost[member] = postToAssign;
+                        shuffledNonPriorityPosts = shuffledNonPriorityPosts.filter(p => p !== postToAssign);
+                        if(shuffledNonPriorityPosts.length === 0) {
+                            shuffledNonPriorityPosts = [...nonPriorityPosts].sort(() => 0.5 - Math.random());
+                        }
                     } else {
-                        assignments[member] = ''; 
+                        // Se não encontrar um posto para revezar, atribui o menos usado
+                        const fallbackPost = postsByUsage[0];
+                        assignments[member] = fallbackPost;
+                        lastPost[member] = fallbackPost;
                     }
                 });
                 
                 schedule.push({ hour: formatHour(hour), assignments: assignments });
             });
+            
             return schedule;
         }
-
 
         function syncScheduleFromDOM() {
             const tables = scheduleTableContainer.querySelectorAll('table');
@@ -994,12 +1309,12 @@
                 const { openingHours } = getWorkHours(isEventDay, isOvertimeNeeded, date);
 
                 const dayHeader = document.createElement('h3');
-                dayHeader.className = 'text-xl font-bold mt-8';
+                dayHeader.className = 'text-2xl font-bold mt-10 text-gray-200';
                 dayHeader.textContent = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
                 scheduleTableContainer.appendChild(dayHeader);
 
                 const table = document.createElement('table');
-                table.className = 'min-w-full divide-y divide-gray-200 mt-2';
+                table.className = 'min-w-full divide-y divide-gray-700 mt-4 bg-gray-800 rounded-lg shadow';
                 
                 const thead = table.createTHead();
                 const headerRow = thead.insertRow();
@@ -1029,12 +1344,12 @@
                     members.forEach(member => {
                         const cell = row.insertCell();
                         const select = document.createElement('select');
-                        select.className = 'w-full rounded-md';
+                        select.className = 'w-full rounded-md bg-gray-700 text-gray-200';
                         const blankOption = document.createElement('option');
                         blankOption.value = '';
                         blankOption.textContent = '';
                         select.appendChild(blankOption);
-                        const allPosts = isEventDayCheckbox.checked ? [...posts] : [...posts];
+                        const allPosts = posts;
                         allPosts.forEach(post => {
                             const option = document.createElement('option');
                             option.value = post;
@@ -1059,23 +1374,23 @@
                         }
 
                         if (isEventDay && isOvertimeNeeded && group1Members.includes(member) && hour >= 18 && hour <= 20) {
-                            select.style.backgroundColor = '#fde68a';
+                            select.style.backgroundColor = '#d97706';
                             select.title = 'Hora Extra';
                         }
                         if (isEventDay) {
                             if (group2Members.includes(member) && (hour < group2StartHour || hour > group2EndHour)) {
-                                cell.style.backgroundColor = '#d1d5db';
+                                cell.style.backgroundColor = '#1f2937';
                                 cell.querySelector('select').disabled = true;
                             } else if (group1Members.includes(member) && (hour < 9 || (hour > 17 && !(isOvertimeNeeded && hour >= 18 && hour <= 20)))) {
-                                cell.style.backgroundColor = '#d1d5db';
+                                cell.style.backgroundColor = '#1f2937';
                                 cell.querySelector('select').disabled = true;
                             }
                         } else {
                             if (!isWeekend && (hour < 13 || hour > 21)) {
-                                cell.style.backgroundColor = '#d1d5db';
+                                cell.style.backgroundColor = '#1f2937';
                                 cell.querySelector('select').disabled = true;
                             } else if (isWeekend && (hour < 9 || hour > 17)) {
-                                cell.style.backgroundColor = '#d1d5db';
+                                cell.style.backgroundColor = '#1f2937';
                                 cell.querySelector('select').disabled = true;
                             }
                         }
@@ -1084,13 +1399,61 @@
                 scheduleTableContainer.appendChild(table);
             });
         }
-        
+
+         function exportToExcel() {
+            if (currentSchedule.length === 0) {
+                showModal("Nenhuma escala para exportar. Por favor, gere uma primeiro.", () => {}, false);
+                return;
+            }
+            syncScheduleFromDOM();
+            
+            const workbook = XLSX.utils.book_new();
+
+            currentSchedule.forEach(dayEntry => {
+                const date = new Date(dayEntry.date + 'T00:00:00');
+                const sheetName = date.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' });
+
+                const data = [
+                    ['Horário', ...members.map(member => member)]
+                ];
+
+                dayEntry.schedule.forEach(entry => {
+                    const row = [entry.hour];
+                    members.forEach(member => {
+                        let post = entry.assignments[member] || '';
+                        row.push(post);
+                    });
+                    data.push(row);
+                });
+
+                const worksheet = XLSX.utils.aoa_to_sheet(data);
+                XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+            });
+
+            XLSX.writeFile(workbook, 'escala.xlsx');
+        }
+
         function renderExportLayout(dayEntry) {
              exportLayoutDiv.innerHTML = '';
              const date = new Date(dayEntry.date + 'T00:00:00');
+             const dayOfWeek = date.getDay();
+             const eventName = eventNameInput.value;
+             const eventTime = eventTimeSelect.value;
+             const showName = showNameInput.value;
+             const showMember = showMemberSelect.value;
+
              const dayHeader = document.createElement('h3');
              dayHeader.className = 'text-2xl font-bold mt-8';
-             dayHeader.textContent = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+             let headerText = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+             
+             if(isEventDayCheckbox.checked) {
+                 headerText = `${eventName} - ${headerText} - ${eventTime}h`;
+             }
+             if (dayOfWeek === 4 && showName && showMember) {
+                 headerText += ` - Show: ${showName} (Responsável: ${showMember})`;
+             }
+
+             dayHeader.textContent = headerText;
              exportLayoutDiv.appendChild(dayHeader);
 
              const table = document.createElement('table');
@@ -1098,7 +1461,13 @@
              
              const thead = table.createTHead();
              const headerRow = thead.insertRow();
-             headerRow.innerHTML = `<th>Horário</th>${members.map(m => `<th>${m === openingMemberSelect.value ? `${m} - Abertura` : m}</th>`).join('')}`;
+             headerRow.innerHTML = `<th>Horário</th>${members.map(member => {
+                 let memberName = member;
+                 if (member === openingMemberSelect.value) {
+                     memberName += ` - Abertura`;
+                 }
+                 return `<th style="text-align:center;">${memberName}</th>`;
+             }).join('')}`;
              
              const tbody = table.createTBody();
              const isEventDay = isEventDayCheckbox.checked;
@@ -1111,33 +1480,33 @@
 
              dayEntry.schedule.forEach(entry => {
                  const row = tbody.insertRow();
-                 row.innerHTML = `<td>${entry.hour}</td>${members.map(m => {
-                     let post = entry.assignments[m] || '';
+                 row.innerHTML = `<td>${entry.hour}</td>${members.map(member => {
+                     let post = entry.assignments[member] || '';
                      let style = '';
                      const hour = parseFloat(entry.hour.replace(':', '.'));
 
                      if (isEventDay) {
-                         if (group2Members.includes(m) && (hour < group2StartHour || hour > group2EndHour)) {
+                         if (group2Members.includes(member) && (hour < group2StartHour || hour > group2EndHour)) {
                              post = '';
                          }
-                         if (group1Members.includes(m) && hour > 20) {
+                         if (group1Members.includes(member) && hour > 20) {
                              post = '';
                          }
                      }
                      if (post === 'ALMOÇO') {
-                         style = 'background-color: #fce7f3;';
+                         style = 'background-color: #4a192c; color: #fca5a5;';
                      }
-                     if (isEventDay && isOvertimeNeeded && group1Members.includes(m) && hour >= 18 && hour <= 20) {
+                     if (isEventDay && isOvertimeNeeded && group1Members.includes(member) && hour >= 18 && hour <= 20) {
                          post = `${post} (EXTRA)`;
-                         style = 'background-color: #fde68a;';
+                         style = 'background-color: #d97706;';
                      }
-                     if (isEventDay && group1Members.includes(m) && (hour > 17 && !isOvertimeNeeded)) {
+                     if (isEventDay && group1Members.includes(member) && (hour > 17 && !isOvertimeNeeded)) {
                          post = '';
                      }
-                     if (m === openingMemberSelect.value && getWorkHours(isEventDay, isOvertimeNeeded, date).openingHours.includes(hour)) {
-                         style = 'background-color: #d1fae5; font-weight: 600;';
+                     if (member === openingMemberSelect.value && getWorkHours(isEventDay, isOvertimeNeeded, date).openingHours.includes(hour)) {
+                         style = 'background-color: #1f3d2f; font-weight: 600; color: #99f6e4;';
                      }
-                     return `<td style="${style}">${post}</td>`;
+                     return `<td style="text-align:center; ${style}">${post}</td>`;
                  }).join('')}`;
              });
              exportLayoutDiv.appendChild(table);
@@ -1153,7 +1522,7 @@
 
         async function exportScheduleAsJpg() {
             if (currentSchedule.length === 0) {
-                showModal("Nenhuma escala para exportar. Por favor, gere uma primeiro.", (confirmed) => {});
+                showModal("Nenhuma escala para exportar. Por favor, gere uma primeiro.", () => {}, false);
                 return;
             }
             syncScheduleFromDOM();
@@ -1175,7 +1544,7 @@
                 const dayName = daysOfWeek[date.getDay()];
 
                 const button = document.createElement('button');
-                button.className = 'btn-secondary text-sm p-2 px-3';
+                button.className = 'btn-secondary text-sm p-2 px-3 rounded-xl';
                 button.textContent = `Exportar ${dayName}`;
                 button.addEventListener('click', () => exportSpecificDay(index));
                 exportDayButtonsDiv.appendChild(button);
@@ -1187,13 +1556,27 @@
             if (currentSchedule[dayIndex]) {
                 await renderExportLayout(currentSchedule[dayIndex]);
             } else {
-                showModal("Dia inválido para exportação.", () => {});
+                showModal("Dia inválido para exportação.", () => {}, false);
             }
+        }
+
+        function exportAnalysis() {
+            // Usa html2canvas para capturar a div que contém o gráfico e o texto
+            html2canvas(chartContainer, { scale: 2, logging: false }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'analise_de_postos.jpg';
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
         }
         
         generateScheduleBtn.addEventListener('click', generateSchedule);
         saveCloudBtn.addEventListener('click', () => saveScheduleToCloud(creatorName));
         exportScheduleBtn.addEventListener('click', exportScheduleAsJpg);
+        exportExcelBtn.addEventListener('click', exportToExcel);
+        exportAnalysisBtn.addEventListener('click', exportAnalysis);
         
         dailyModeRadio.addEventListener('change', () => {
              isWeeklyMode = false;
@@ -1207,12 +1590,8 @@
              renderExportButtons();
         });
         
-        // Initial rendering of fixed members and posts
         renderMembers();
         renderPosts();
-
-        if (initialAuthToken) {
-        }
     </script>
 </body>
 </html>
